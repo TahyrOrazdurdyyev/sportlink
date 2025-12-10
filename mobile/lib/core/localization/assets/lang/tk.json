@@ -1,0 +1,17 @@
+{
+  "app_name": "Sportlink",
+  "login": "Giriş",
+  "phone_number": "Telefon belgisi",
+  "send_code": "Kod iber",
+  "verify_code": "Kod tassyklamak",
+  "home": "Baş sahypa",
+  "profile": "Profil",
+  "search_partners": "Hyzmatdaş gözlemek",
+  "courts": "Meydançalar",
+  "bookings": "Bronlar",
+  "tournaments": "Bäsleşikler",
+  "notifications": "Habarnamalar",
+  "settings": "Sazlamalar",
+  "logout": "Çykmak"
+}
+

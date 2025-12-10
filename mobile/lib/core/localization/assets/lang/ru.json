@@ -1,0 +1,17 @@
+{
+  "app_name": "Sportlink",
+  "login": "Вход",
+  "phone_number": "Номер телефона",
+  "send_code": "Отправить код",
+  "verify_code": "Подтвердить код",
+  "home": "Главная",
+  "profile": "Профиль",
+  "search_partners": "Поиск партнеров",
+  "courts": "Площадки",
+  "bookings": "Бронирования",
+  "tournaments": "Турниры",
+  "notifications": "Уведомления",
+  "settings": "Настройки",
+  "logout": "Выйти"
+}
+

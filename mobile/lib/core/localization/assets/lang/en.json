@@ -1,0 +1,17 @@
+{
+  "app_name": "Sportlink",
+  "login": "Login",
+  "phone_number": "Phone Number",
+  "send_code": "Send Code",
+  "verify_code": "Verify Code",
+  "home": "Home",
+  "profile": "Profile",
+  "search_partners": "Search Partners",
+  "courts": "Courts",
+  "bookings": "Bookings",
+  "tournaments": "Tournaments",
+  "notifications": "Notifications",
+  "settings": "Settings",
+  "logout": "Logout"
+}
+
