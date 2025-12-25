@@ -435,7 +435,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  subscription.planName,
+                  subscription.getLocalizedPlanName('en'), // TODO: use actual locale
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -503,7 +503,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
             const SizedBox(height: 16),
             const Divider(color: Colors.white30),
             const SizedBox(height: 12),
-            ...subscription.planFeatures.take(3).map((feature) => Padding(
+            ...subscription.getFeaturesList().take(3).map((feature) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [

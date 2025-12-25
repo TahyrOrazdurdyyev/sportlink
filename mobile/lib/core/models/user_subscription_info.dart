@@ -1,8 +1,8 @@
 class UserSubscriptionInfo {
   final String id;
   final String planId;
-  final String planName;
-  final List<String> planFeatures;
+  final Map<String, String> planName; // i18n map
+  final Map<String, dynamic> planFeatures; // feature flags
   final DateTime? startDate;
   final DateTime? endDate;
   final String status;
@@ -23,10 +23,12 @@ class UserSubscriptionInfo {
     return UserSubscriptionInfo(
       id: json['id'] as String,
       planId: json['plan_id'] as String,
-      planName: json['plan_name'] as String,
+      planName: json['plan_name'] != null
+          ? Map<String, String>.from(json['plan_name'] as Map)
+          : {'en': 'Unknown'},
       planFeatures: json['plan_features'] != null
-          ? List<String>.from(json['plan_features'] as List)
-          : [],
+          ? Map<String, dynamic>.from(json['plan_features'] as Map)
+          : {},
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'] as String)
           : null,
@@ -57,6 +59,17 @@ class UserSubscriptionInfo {
     if (endDate == null) return 0;
     final diff = endDate!.difference(DateTime.now());
     return diff.inDays > 0 ? diff.inDays : 0;
+  }
+  
+  String getLocalizedPlanName(String languageCode) {
+    return planName[languageCode] ?? planName['en'] ?? 'Unknown Plan';
+  }
+  
+  List<String> getFeaturesList() {
+    return planFeatures.entries
+        .where((entry) => entry.value == true)
+        .map((entry) => entry.key.replaceAll('_', ' ').toUpperCase())
+        .toList();
   }
 }
 
