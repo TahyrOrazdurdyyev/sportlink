@@ -39,6 +39,7 @@ class MongoEngineModelSerializer(serializers.Serializer):
         if fields == '__all__':
             fields = [field_name for field_name in instance._fields.keys()]
         
+        # First, serialize MongoEngine fields
         for field_name in fields:
             if field_name in exclude:
                 continue
@@ -47,7 +48,27 @@ class MongoEngineModelSerializer(serializers.Serializer):
                 field_value = getattr(instance, field_name)
                 ret[field_name] = self._serialize_field_value(field_value)
             except AttributeError:
+                # Field doesn't exist on instance, might be a SerializerMethodField
+                pass
+        
+        # Then, handle SerializerMethodFields and other DRF fields
+        for field_name, field in self.fields.items():
+            if field_name in ret:
+                # Already serialized from MongoEngine
                 continue
+            
+            if isinstance(field, serializers.SerializerMethodField):
+                method_name = field.method_name or f'get_{field_name}'
+                method = getattr(self, method_name, None)
+                if method:
+                    ret[field_name] = method(instance)
+            elif hasattr(field, 'to_representation'):
+                # Handle other DRF fields
+                try:
+                    value = getattr(instance, field_name, None)
+                    ret[field_name] = field.to_representation(value)
+                except AttributeError:
+                    pass
         
         return ret
     
