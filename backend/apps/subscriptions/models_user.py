@@ -53,7 +53,17 @@ class UserSubscription(Document):
     }
     
     def __str__(self):
-        return f"{self.user} - {self.plan.name.get('en', 'Unknown')} ({self.status})"
+        # Get plan ID from MongoDB directly
+        sub_dict = self.to_mongo().to_dict()
+        plan_id = sub_dict.get('plan')
+        
+        plan_name = 'Unknown'
+        if plan_id:
+            plan = SubscriptionPlan.objects(id=plan_id).first()
+            if plan:
+                plan_name = plan.name.get('en', 'Unknown')
+        
+        return f"{self.user} - {plan_name} ({self.status})"
     
     def save(self, *args, **kwargs):
         """Override save to update timestamps"""
@@ -73,7 +83,19 @@ class UserSubscription(Document):
         if not self.is_active():
             return False
         
-        return self.plan.features.get(feature_key, False)
+        # Get plan ID from MongoDB directly to avoid dereferencing issues
+        sub_dict = self.to_mongo().to_dict()
+        plan_id = sub_dict.get('plan')
+        
+        if not plan_id:
+            return False
+        
+        # Load plan by ID
+        plan = SubscriptionPlan.objects(id=plan_id).first()
+        if not plan:
+            return False
+        
+        return plan.features.get(feature_key, False)
     
     def cancel(self):
         """Cancel subscription"""

@@ -102,5 +102,19 @@ def get_user_features(user):
     if not subscription:
         return {}
     
-    return subscription.plan.features
+    # Get plan ID from MongoDB directly to avoid dereferencing issues
+    from apps.subscriptions.models import SubscriptionPlan
+    
+    sub_dict = subscription.to_mongo().to_dict()
+    plan_id = sub_dict.get('plan')
+    
+    if not plan_id:
+        return {}
+    
+    # Load plan by ID
+    plan = SubscriptionPlan.objects(id=plan_id).first()
+    if not plan:
+        return {}
+    
+    return plan.features
 
