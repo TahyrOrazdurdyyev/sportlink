@@ -28,6 +28,7 @@ class UserCategorySerializer(serializers.Serializer):
 class UserSerializer(MongoEngineModelSerializer):
     """Full user serializer"""
     favorite_sports = UserCategorySerializer(many=True, required=False)
+    subscription = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -35,9 +36,59 @@ class UserSerializer(MongoEngineModelSerializer):
             'id', 'phone', 'nickname', 'email', 'first_name', 'last_name', 'birth_date',
             'age', 'gender', 'city', 'location', 'favorite_sports', 'experience_level',
             'preferred_ball', 'goals', 'rating', 'avatar_url', 'is_active',
-            'created_at', 'updated_at', 'last_active_at'
+            'created_at', 'updated_at', 'last_active_at', 'subscription'
         ]
-        read_only_fields = ['id', 'rating', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'rating', 'created_at', 'updated_at', 'subscription']
+    
+    def get_subscription(self, obj):
+        """Get user's active subscription"""
+        from apps.subscriptions.models_user import UserSubscription
+        from apps.subscriptions.models import SubscriptionPlan
+        from datetime import datetime
+        from uuid import UUID
+        
+        try:
+            # Get active subscription
+            subscription = UserSubscription.objects(
+                user=obj,
+                status='active',
+                end_date__gte=datetime.utcnow()
+            ).order_by('-created_at').first()
+            
+            if not subscription:
+                return None
+            
+            # Get plan details
+            sub_dict = subscription.to_mongo().to_dict()
+            plan_ref = sub_dict.get('plan')
+            
+            # Convert to UUID
+            if isinstance(plan_ref, str):
+                plan_id = UUID(plan_ref)
+            elif isinstance(plan_ref, UUID):
+                plan_id = plan_ref
+            else:
+                plan_id = plan_ref
+            
+            # Load plan
+            plan = SubscriptionPlan.objects(id=plan_id).first()
+            
+            if not plan:
+                return None
+            
+            return {
+                'id': str(subscription.id),
+                'plan_id': str(plan.id),
+                'plan_name': plan.name,
+                'plan_features': plan.features,
+                'start_date': subscription.start_date.isoformat() if subscription.start_date else None,
+                'end_date': subscription.end_date.isoformat() if subscription.end_date else None,
+                'status': subscription.status,
+                'payment_method': subscription.payment_method,
+            }
+        except Exception as e:
+            print(f"Error getting subscription for user {obj.id}: {e}")
+            return None
 
 
 class UserPublicSerializer(MongoEngineModelSerializer):

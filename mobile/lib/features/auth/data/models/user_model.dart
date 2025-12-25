@@ -1,4 +1,5 @@
 import 'package:sportlink/core/models/favorite_sport.dart';
+import 'package:sportlink/core/models/user_subscription_info.dart';
 
 class UserModel {
   final String id;
@@ -18,6 +19,7 @@ class UserModel {
   final List<String> goals;
   final double rating;
   final String? avatarUrl;
+  final UserSubscriptionInfo? subscription;
   
   UserModel({
     required this.id,
@@ -37,6 +39,7 @@ class UserModel {
     this.goals = const [],
     this.rating = 0.0,
     this.avatarUrl,
+    this.subscription,
   });
   
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -68,6 +71,9 @@ class UserModel {
           : [],
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       avatarUrl: json['avatar_url'] as String?,
+      subscription: json['subscription'] != null
+          ? UserSubscriptionInfo.fromJson(json['subscription'] as Map<String, dynamic>)
+          : null,
     );
   }
   
@@ -90,6 +96,7 @@ class UserModel {
       'goals': goals,
       'rating': rating,
       'avatar_url': avatarUrl,
+      'subscription': subscription?.toJson(),
     };
   }
   
@@ -111,6 +118,7 @@ class UserModel {
     List<String>? goals,
     double? rating,
     String? avatarUrl,
+    UserSubscriptionInfo? subscription,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -130,6 +138,7 @@ class UserModel {
       goals: goals ?? this.goals,
       rating: rating ?? this.rating,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      subscription: subscription ?? this.subscription,
     );
   }
 }

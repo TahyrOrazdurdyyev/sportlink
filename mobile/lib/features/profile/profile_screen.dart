@@ -224,6 +224,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   
                   const SizedBox(height: 24),
                   
+                  // Subscription Card
+                  _buildSubscriptionCard(),
+                  
+                  const SizedBox(height: 24),
+                  
                   // Action Buttons
                   _buildActionButton(
                     icon: Icons.edit,
@@ -341,6 +346,189 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
         ],
       ),
     );
+  }
+
+  Widget _buildSubscriptionCard() {
+    final subscription = _currentUser?.subscription;
+    
+    if (subscription == null) {
+      // No subscription
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.grey.shade300, Colors.grey.shade200],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.card_membership, color: Colors.grey.shade700, size: 28),
+                const SizedBox(width: 12),
+                const Text(
+                  'No Active Subscription',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Subscribe to unlock premium features',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Has subscription
+    final daysRemaining = subscription.daysRemaining;
+    final isExpiringSoon = daysRemaining <= 7;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor,
+            Theme.of(context).primaryColor.withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).primaryColor.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  subscription.planName,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  subscription.status.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Expiry info
+          if (subscription.endDate != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, color: Colors.white70, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Expires: ${_formatDate(subscription.endDate!)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  isExpiringSoon ? Icons.warning_amber : Icons.timer,
+                  color: isExpiringSoon ? Colors.orange.shade300 : Colors.white70,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$daysRemaining days remaining',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isExpiringSoon ? Colors.orange.shade300 : Colors.white70,
+                    fontWeight: isExpiringSoon ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ],
+          
+          // Features
+          if (subscription.planFeatures.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white30),
+            const SizedBox(height: 12),
+            ...subscription.planFeatures.take(3).map((feature) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      feature,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   Widget _buildActionButton({
