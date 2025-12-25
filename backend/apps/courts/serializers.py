@@ -36,19 +36,13 @@ class CourtSerializer(MongoEngineModelSerializer):
         
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
-            request = self.context.get('request')
+            from django.conf import settings
+            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):
                     # It's a relative URL, make it absolute
-                    if request:
-                        absolute_url = request.build_absolute_uri(img_url)
-                        absolute_images.append(absolute_url)
-                    else:
-                        # Fallback if no request in context
-                        from django.conf import settings
-                        base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
-                        absolute_images.append(f"{base_url}{img_url}")
+                    absolute_images.append(f"{base_url}{img_url}")
                 else:
                     absolute_images.append(img_url)
             ret['images'] = absolute_images
@@ -144,17 +138,12 @@ class CourtListSerializer(MongoEngineModelSerializer):
         
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
-            request = self.context.get('request')
+            from django.conf import settings
+            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):
-                    if request:
-                        absolute_url = request.build_absolute_uri(img_url)
-                        absolute_images.append(absolute_url)
-                    else:
-                        from django.conf import settings
-                        base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
-                        absolute_images.append(f"{base_url}{img_url}")
+                    absolute_images.append(f"{base_url}{img_url}")
                 else:
                     absolute_images.append(img_url)
             ret['images'] = absolute_images
@@ -194,17 +183,12 @@ class CourtDetailSerializer(MongoEngineModelSerializer):
         
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
-            request = self.context.get('request')
+            from django.conf import settings
+            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):
-                    if request:
-                        absolute_url = request.build_absolute_uri(img_url)
-                        absolute_images.append(absolute_url)
-                    else:
-                        from django.conf import settings
-                        base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
-                        absolute_images.append(f"{base_url}{img_url}")
+                    absolute_images.append(f"{base_url}{img_url}")
                 else:
                     absolute_images.append(img_url)
             ret['images'] = absolute_images

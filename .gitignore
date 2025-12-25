@@ -85,3 +85,4 @@ logs/
 # OS
 Thumbs.db
 
+backend/config/firebase-adminsdk.json
