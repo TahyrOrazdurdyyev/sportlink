@@ -30,6 +30,18 @@ class TournamentSerializer(MongoEngineModelSerializer):
         ret['participant_count'] = self.get_participant_count(instance)
         # Ensure booleans are actual booleans, not numbers
         ret['registration_open'] = bool(instance.registration_open)
+        
+        # Convert relative image URL to absolute URL
+        if ret.get('image_url') and not ret['image_url'].startswith('http'):
+            request = self.context.get('request')
+            if request:
+                ret['image_url'] = request.build_absolute_uri(ret['image_url'])
+            else:
+                # Fallback if no request in context
+                from django.conf import settings
+                base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
+                ret['image_url'] = f"{base_url}{ret['image_url']}"
+        
         return ret
     
     def get_participant_count(self, obj):
