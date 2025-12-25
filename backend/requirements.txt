@@ -45,6 +45,5 @@ django-debug-toolbar==4.2.0
 gunicorn==21.2.0
 whitenoise==6.6.0
 
-# Geo
-django-rest-framework-gis==1.0
+# Geo - not used, removed django-rest-framework-gis
 

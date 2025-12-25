@@ -14,14 +14,16 @@ dependencies:
   provider: ^6.1.1
   flutter_riverpod: ^2.4.9
   
+  # Routing
+  go_router: ^14.6.2
+  
   # Networking
   dio: ^5.4.0
   http: ^1.1.2
   
-  # Firebase
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.15.3
-  firebase_messaging: ^14.7.9
+  # Firebase (only for push notifications)
+  firebase_core: ^2.32.0
+  firebase_messaging: ^14.7.10
   
   # Local Storage
   shared_preferences: ^2.2.2
@@ -31,9 +33,10 @@ dependencies:
   # UI
   flutter_localizations:
     sdk: flutter
-  intl: ^0.18.1
+  intl: ^0.20.2
   cached_network_image: ^3.3.0
   image_picker: ^1.0.7
+  permission_handler: ^11.0.1
   
   # Location
   geolocator: ^10.1.0
@@ -45,7 +48,10 @@ dependencies:
   # UI Components
   flutter_svg: ^2.0.9
   shimmer: ^3.0.0
+  flutter_markdown: ^0.6.18
+  url_launcher: ^6.2.4
   pull_to_refresh: ^2.0.0
+  fl_chart: ^0.66.0
   
   # Utils
   uuid: ^4.1.0
@@ -64,12 +70,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  assets:
-    - assets/images/
-    - assets/icons/
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
   
-  fonts:
-    - family: CustomFont
-      fonts:
-        - asset: assets/fonts/CustomFont-Regular.ttf
+  # fonts:
+  #   - family: CustomFont
+  #     fonts:
+  #       - asset: assets/fonts/CustomFont-Regular.ttf
 

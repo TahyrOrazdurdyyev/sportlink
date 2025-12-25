@@ -1,5 +1,6 @@
 import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Drawer,
@@ -25,26 +26,30 @@ import {
   People,
   Assessment,
   Logout,
+  Notifications,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const drawerWidth = 240
 
-const menuItems = [
-  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Categories', icon: <Category />, path: '/categories' },
-  { text: 'Courts', icon: <SportsTennis />, path: '/courts' },
-  { text: 'Tariffs', icon: <AttachMoney />, path: '/tariffs' },
-  { text: 'Tournaments', icon: <EmojiEvents />, path: '/tournaments' },
-  { text: 'Users', icon: <People />, path: '/users' },
-  { text: 'Reports', icon: <Assessment />, path: '/reports' },
-]
-
 export default function Layout() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const logout = useAuthStore((state) => state.logout)
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+
+  const menuItems = [
+    { text: t('dashboard'), icon: <Dashboard />, path: '/dashboard' },
+    { text: t('categories'), icon: <Category />, path: '/categories' },
+    { text: t('courts'), icon: <SportsTennis />, path: '/courts' },
+    { text: t('tariffs'), icon: <AttachMoney />, path: '/tariffs' },
+    { text: t('tournaments'), icon: <EmojiEvents />, path: '/tournaments' },
+    { text: t('users'), icon: <People />, path: '/users' },
+    { text: t('reports'), icon: <Assessment />, path: '/reports' },
+    { text: t('notifications'), icon: <Notifications />, path: '/notifications' },
+  ]
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -70,6 +75,7 @@ export default function Layout() {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Sportlink Admin
           </Typography>
+          <LanguageSwitcher />
           <IconButton onClick={handleMenuOpen}>
             <Avatar sx={{ width: 32, height: 32 }}>A</Avatar>
           </IconButton>
@@ -82,7 +88,7 @@ export default function Layout() {
               <ListItemIcon>
                 <Logout fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Logout</ListItemText>
+              <ListItemText>{t('logout')}</ListItemText>
             </MenuItem>
           </Menu>
         </Toolbar>

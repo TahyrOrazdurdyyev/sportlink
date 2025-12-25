@@ -10,7 +10,9 @@ import TariffsPage from './pages/TariffsPage'
 import TournamentsPage from './pages/TournamentsPage'
 import UsersPage from './pages/UsersPage'
 import ReportsPage from './pages/ReportsPage'
+import NotificationsPage from './pages/NotificationsPage'
 import { useAuthStore } from './stores/authStore'
+import './i18n/config'
 
 const theme = createTheme({
   palette: {
@@ -57,6 +59,7 @@ function App() {
           <Route path="tournaments" element={<TournamentsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
         </Route>
       </Routes>
     </ThemeProvider>

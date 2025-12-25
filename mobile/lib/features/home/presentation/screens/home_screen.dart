@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../tournaments/presentation/screens/tournaments_list_screen.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -23,28 +24,45 @@ class HomeScreen extends StatelessWidget {
             icon: Icons.search,
             title: context.t('search_partners'),
             color: AppTheme.primaryOrange,
-            onTap: () => context.push('/search/partners'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Coming Soon')),
+              );
+            },
           ),
           _buildMenuCard(
             context,
             icon: Icons.sports_tennis,
             title: context.t('courts'),
             color: Colors.green,
-            onTap: () => context.push('/courts'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Coming Soon')),
+              );
+            },
           ),
           _buildMenuCard(
             context,
             icon: Icons.calendar_today,
             title: context.t('bookings'),
             color: Colors.blue,
-            onTap: () => context.push('/bookings'),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Coming Soon')),
+              );
+            },
           ),
           _buildMenuCard(
             context,
             icon: Icons.emoji_events,
             title: context.t('tournaments'),
             color: Colors.amber,
-            onTap: () => context.push('/tournaments'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TournamentsListScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -62,7 +80,10 @@ class HomeScreen extends StatelessWidget {
         ],
         onTap: (index) {
           if (index == 1) {
-            context.push('/profile');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
           }
         },
       ),

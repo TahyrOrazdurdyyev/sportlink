@@ -34,23 +34,14 @@ class AvailabilitySlot(EmbeddedDocument):
 class Court(Document):
     """Sports court/field for MongoDB"""
     
-    COURT_TYPE_CHOICES = [
-        ('tennis', 'Tennis'),
-        ('football', 'Football'),
-        ('basketball', 'Basketball'),
-        ('volleyball', 'Volleyball'),
-        ('gym', 'Gym'),
-        ('other', 'Other'),
-    ]
-    
     # ID
     id = fields.UUIDField(primary_key=True, default=uuid.uuid4, binary=False)
     
     # Basic info
     name_i18n = fields.DictField(default=dict)  # Multilingual name
     address = fields.StringField(required=True)
-    location = fields.PointField(required=True)  # MongoDB GeoJSON point
-    type = fields.StringField(choices=COURT_TYPE_CHOICES, required=True)
+    location = fields.PointField()  # MongoDB GeoJSON point (optional)
+    type = fields.StringField(required=True)  # Category ID or legacy type
     
     # Ownership
     owner = fields.ReferenceField(User, reverse_delete_rule=2)  # NULLIFY

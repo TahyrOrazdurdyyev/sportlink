@@ -7,32 +7,100 @@ from apps.courts.models import Court
 
 
 class CourtSerializer(MongoEngineModelSerializer):
-    """Full court serializer"""
+    """Full court serializer for admin"""
+    id = serializers.UUIDField(read_only=True)
     location = serializers.ListField(
         child=serializers.FloatField(),
-        required=False
+        required=False,
+        allow_null=True,
+        help_text="Location as [longitude, latitude]"
     )
+    owner_id = serializers.UUIDField(required=False, allow_null=True)
     
     class Meta:
         model = Court
         fields = [
-            'id', 'name_i18n', 'address', 'location', 'type', 'owner',
-            'attributes', 'images', 'tariffs', 'is_active',
+            'id', 'name_i18n', 'address', 'location', 'type', 
+            'owner_id', 'attributes', 'images', 'tariffs', 'is_active',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def to_representation(self, instance):
+        """Convert location from GeoJSON to [lng, lat]"""
+        ret = super().to_representation(instance)
+        if instance.location and 'coordinates' in instance.location:
+            ret['location'] = instance.location['coordinates']
+        # Ensure is_active is boolean
+        ret['is_active'] = bool(instance.is_active)
+        return ret
+    
     def create(self, validated_data):
         """Create court with location handling"""
-        # Handle location (convert from [lng, lat] to GeoJSON Point)
         location = validated_data.pop('location', None)
+        owner_id = validated_data.pop('owner_id', None)
+        
+        # Handle location (convert from [lng, lat] to GeoJSON Point)
         if location and len(location) == 2:
             validated_data['location'] = {
                 'type': 'Point',
                 'coordinates': [float(location[0]), float(location[1])]
             }
         
-        return super().create(validated_data)
+        # Handle owner
+        if owner_id:
+            from apps.users.models import User
+            try:
+                owner = User.objects.get(id=owner_id)
+                validated_data['owner'] = owner
+            except User.DoesNotExist:
+                raise serializers.ValidationError({'owner_id': 'Owner not found'})
+        
+        court = Court(**validated_data)
+        court.save()
+        return court
+    
+    def update(self, instance, validated_data):
+        """Update court"""
+        location = validated_data.pop('location', None)
+        owner_id = validated_data.pop('owner_id', None)
+        tariffs_data = validated_data.pop('tariffs', None)
+        
+        # Handle location
+        if location and len(location) == 2:
+            instance.location = {
+                'type': 'Point',
+                'coordinates': [float(location[0]), float(location[1])]
+            }
+        
+        # Handle owner
+        if owner_id:
+            from apps.users.models import User
+            try:
+                owner = User.objects.get(id=owner_id)
+                instance.owner = owner
+            except User.DoesNotExist:
+                raise serializers.ValidationError({'owner_id': 'Owner not found'})
+        elif 'owner_id' in validated_data:
+            instance.owner = None
+        
+        # Handle tariffs - convert dicts to Tariff instances
+        if tariffs_data is not None:
+            from apps.courts.models import Tariff
+            tariff_instances = []
+            for tariff_data in tariffs_data:
+                if isinstance(tariff_data, dict):
+                    tariff_instances.append(Tariff(**tariff_data))
+                else:
+                    tariff_instances.append(tariff_data)
+            instance.tariffs = tariff_instances
+        
+        # Update other fields
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+        
+        instance.save()
+        return instance
 
 
 class CourtListSerializer(MongoEngineModelSerializer):
@@ -48,7 +116,6 @@ class CourtListSerializer(MongoEngineModelSerializer):
     
     def get_distance(self, obj):
         """Calculate distance from user location"""
-        # Distance will be calculated in the view
         return getattr(obj, '_distance', None)
 
 

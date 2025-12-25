@@ -1,51 +1,45 @@
 """
-Tournament serializers
+Tournament serializers for MongoDB
 """
 from rest_framework import serializers
-from .models import Tournament, TournamentParticipant
-from apps.courts.serializers import CourtSerializer
+from apps.core.mongoengine_drf import MongoEngineModelSerializer
+from apps.tournaments.models import Tournament
 
 
-class TournamentSerializer(serializers.ModelSerializer):
-    """Tournament serializer"""
-    courts = CourtSerializer(many=True, read_only=True)
-    court_ids = serializers.ListField(
-        child=serializers.UUIDField(),
-        write_only=True,
-        required=False
-    )
+class TournamentSerializer(MongoEngineModelSerializer):
+    """Full tournament serializer for admin"""
+    id = serializers.UUIDField(read_only=True)
     participant_count = serializers.SerializerMethodField()
-    is_registered = serializers.SerializerMethodField()
     
     class Meta:
         model = Tournament
         fields = [
-            'id', 'name_i18n', 'description_i18n', 'courts', 'court_ids',
-            'organizer_info', 'start_date', 'end_date',
-            'max_participants', 'registration_open', 'registration_link',
-            'participant_count', 'is_registered', 'created_at', 'updated_at'
+            'id', 'name_i18n', 'description_i18n', 'image_url',
+            'location_description', 'country', 'city', 'organizer_name', 'registration_link',
+            'start_date', 'end_date', 'registration_deadline',
+            'max_participants', 'min_participants',
+            'registration_open', 'registration_fee',
+            'status', 'participant_count', 'categories', 'rules', 'prizes',
+            'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
-    def get_participant_count(self, obj):
-        return obj.participants.filter(status__in=['accepted', 'paid']).count()
+    def to_representation(self, instance):
+        """Override to add participant_count and fix booleans"""
+        ret = super().to_representation(instance)
+        ret['participant_count'] = self.get_participant_count(instance)
+        # Ensure booleans are actual booleans, not numbers
+        ret['registration_open'] = bool(instance.registration_open)
+        return ret
     
-    def get_is_registered(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.participants.filter(
-                user=request.user,
-                status__in=['applied', 'accepted', 'paid']
-            ).exists()
-        return False
+    def get_participant_count(self, obj):
+        """Get count of accepted participants"""
+        return obj.get_participant_count()
 
 
-class TournamentParticipantSerializer(serializers.ModelSerializer):
+class TournamentParticipantSerializer(serializers.Serializer):
     """Tournament participant serializer"""
     user = serializers.StringRelatedField(read_only=True)
-    
-    class Meta:
-        model = TournamentParticipant
-        fields = ['id', 'user', 'status', 'applied_at', 'updated_at']
-        read_only_fields = ['id', 'applied_at', 'updated_at']
+    status = serializers.CharField(read_only=True)
+    registration_date = serializers.DateTimeField(read_only=True)
 

@@ -5,19 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
+import '../../features/auth/presentation/screens/auth_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/edit_profile_screen.dart';
 import '../../features/search/presentation/screens/search_partners_screen.dart';
 import '../../features/courts/presentation/screens/courts_list_screen.dart';
 import '../../features/courts/presentation/screens/court_detail_screen.dart';
 import '../../features/bookings/presentation/screens/bookings_list_screen.dart';
+import '../../features/bookings/booking_history_screen.dart';
 import '../../features/tournaments/presentation/screens/tournaments_list_screen.dart';
 import '../../features/tournaments/presentation/screens/tournament_detail_screen.dart';
+import '../../features/subscription/subscription_plans_screen.dart';
+import '../../features/settings/settings_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/home',
     routes: [
       GoRoute(
         path: '/login',
@@ -67,6 +72,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id'] ?? '';
           return TournamentDetailScreen(tournamentId: id);
         },
+      ),
+      GoRoute(
+        path: '/auth',
+        builder: (context, state) => const AuthScreen(),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/booking-history',
+        builder: (context, state) => const BookingHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/subscription',
+        builder: (context, state) => const SubscriptionPlansScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

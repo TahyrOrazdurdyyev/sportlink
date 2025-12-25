@@ -5,7 +5,6 @@ Django settings for sportlink project.
 import os
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
 # Settings for MongoDB Sportlink project
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -15,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.31.106').split(',')
 
 
 # Application definition
@@ -44,11 +43,13 @@ INSTALLED_APPS = [
     'apps.tournaments',
     'apps.notifications',
     'apps.matches',
+    'apps.subscriptions',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -202,8 +203,16 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 CORS_ALLOW_CREDENTIALS = True
 
 # Firebase
-FIREBASE_CREDENTIALS_PATH = os.getenv('FIREBASE_CREDENTIALS_PATH', '')
-FIREBASE_PROJECT_ID = os.getenv('FIREBASE_PROJECT_ID', '')
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'config', 'firebase-adminsdk.json')
+FIREBASE_PROJECT_ID = 'sportlink-4532d'
+
+# Initialize Firebase Admin SDK
+import firebase_admin
+from firebase_admin import credentials
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+    firebase_admin.initialize_app(cred)
 
 # AWS S3
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
@@ -215,6 +224,9 @@ AWS_DEFAULT_ACL = 'public-read'
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
+
+# Storage settings
+USE_S3 = os.getenv('USE_S3', 'False') == 'True'
 
 # Redis & Celery
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')

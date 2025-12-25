@@ -17,6 +17,8 @@ class BookingSerializer(MongoEngineModelSerializer):
         model = Booking
         fields = [
             'id', 'user', 'court', 'start_time', 'end_time', 'status',
+            'number_of_players', 'find_opponents', 'opponents_needed',
+            'equipment_needed', 'equipment_details',
             'participants', 'tariff_snapshot', 'total_price',
             'payment_method', 'payment_status', 'notes',
             'created_at', 'updated_at', 'user_details', 'court_details'
@@ -40,9 +42,44 @@ class BookingCreateSerializer(MongoEngineModelSerializer):
     class Meta:
         model = Booking
         fields = [
-            'court', 'start_time', 'end_time', 'participants',
-            'payment_method', 'notes'
+            'court', 'start_time', 'end_time',
+            'number_of_players', 'find_opponents', 'opponents_needed',
+            'equipment_needed', 'equipment_details',
+            'participants', 'payment_method', 'notes'
         ]
+    
+    def validate(self, data):
+        """Validate booking data"""
+        # Validate opponents logic
+        if data.get('find_opponents', False):
+            opponents_needed = data.get('opponents_needed', 0)
+            if opponents_needed <= 0:
+                raise serializers.ValidationError({
+                    'opponents_needed': 'Must specify number of opponents needed when find_opponents is True'
+                })
+        else:
+            # If not finding opponents, set opponents_needed to 0
+            data['opponents_needed'] = 0
+        
+        # Validate equipment logic
+        if data.get('equipment_needed', False):
+            equipment_details = data.get('equipment_details', {})
+            if not equipment_details or not any(equipment_details.values()):
+                raise serializers.ValidationError({
+                    'equipment_details': 'Must specify equipment details when equipment_needed is True'
+                })
+            
+            # Validate equipment quantities are positive
+            for item, quantity in equipment_details.items():
+                if not isinstance(quantity, int) or quantity <= 0:
+                    raise serializers.ValidationError({
+                        'equipment_details': f'Invalid quantity for {item}. Must be a positive integer'
+                    })
+        else:
+            # If equipment not needed, clear equipment_details
+            data['equipment_details'] = {}
+        
+        return data
     
     def create(self, validated_data):
         """Create booking with user from request"""
@@ -61,6 +98,8 @@ class BookingListSerializer(MongoEngineModelSerializer):
         model = Booking
         fields = [
             'id', 'court_name', 'start_time', 'end_time', 'status',
+            'number_of_players', 'find_opponents', 'opponents_needed',
+            'equipment_needed', 'equipment_details',
             'payment_status', 'created_at'
         ]
     

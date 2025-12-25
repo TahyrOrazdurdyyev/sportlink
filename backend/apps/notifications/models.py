@@ -8,112 +8,108 @@ from apps.users.models import User
 
 
 class Notification(Document):
-    """Notification model for MongoDB"""
+    """Notification model"""
     
     TYPE_CHOICES = [
-        ('push', 'Push Notification'),
-        ('email', 'Email'),
-        ('sms', 'SMS'),
-        ('in_app', 'In-App Notification'),
-    ]
-    
-    PRIORITY_CHOICES = [
-        ('low', 'Low'),
-        ('normal', 'Normal'),
-        ('high', 'High'),
-        ('urgent', 'Urgent'),
-    ]
-    
-    EVENT_TYPE_CHOICES = [
-        ('tournament_created', 'Tournament Created'),
         ('booking_confirmed', 'Booking Confirmed'),
         ('booking_cancelled', 'Booking Cancelled'),
-        ('tournament_registration_open', 'Tournament Registration Open'),
-        ('tournament_reminder', 'Tournament Reminder'),
-        ('match_invite', 'Match Invitation'),
-        ('partner_request', 'Partner Request'),
-        ('payment_reminder', 'Payment Reminder'),
-        ('system_announcement', 'System Announcement'),
+        ('opponent_matched', 'Opponent Matched'),
+        ('match_reminder', 'Match Reminder'),
+        ('payment_received', 'Payment Received'),
+        ('tournament_update', 'Tournament Update'),
+        ('system', 'System Notification'),
     ]
     
     # ID
     id = fields.UUIDField(primary_key=True, default=uuid.uuid4, binary=False)
     
-    # Target user
+    # Recipient
     user = fields.ReferenceField(User, required=True, reverse_delete_rule=1)  # CASCADE
     
     # Notification details
     type = fields.StringField(choices=TYPE_CHOICES, required=True)
-    event_type = fields.StringField(choices=EVENT_TYPE_CHOICES)
-    priority = fields.StringField(choices=PRIORITY_CHOICES, default='normal')
+    title = fields.DictField(required=True)  # i18n: {'en': '...', 'ru': '...', 'tk': '...'}
+    message = fields.DictField(required=True)  # i18n: {'en': '...', 'ru': '...', 'tk': '...'}
     
-    # Content
-    title = fields.StringField(max_length=200, required=True)
-    message = fields.StringField(max_length=1000, required=True)
-    
-    # Multilingual content (optional)
-    title_i18n = fields.DictField()  # {"tk": "...", "ru": "...", "en": "..."}
-    message_i18n = fields.DictField()  # {"tk": "...", "ru": "...", "en": "..."}
-    
-    # Payload data (additional info for the app)
-    payload = fields.DictField(default=dict)
-    # Example payload structures:
-    # Tournament: {"tournament_id": "uuid", "start_date": "...", "location": "..."}
-    # Booking: {"booking_id": "uuid", "court_name": "...", "start_time": "..."}
-    # Match: {"match_id": "uuid", "opponent": "...", "court": "..."}
-    
-    # Delivery tracking
-    sent_at = fields.DateTimeField()
-    delivered_at = fields.DateTimeField()
-    read_at = fields.DateTimeField()
-    clicked_at = fields.DateTimeField()
+    # Additional data (for deep linking, etc.)
+    data = fields.DictField()  # e.g., {'booking_id': '...', 'opponent_id': '...'}
     
     # Status
-    is_sent = fields.BooleanField(default=False)
-    is_delivered = fields.BooleanField(default=False)
     is_read = fields.BooleanField(default=False)
-    is_clicked = fields.BooleanField(default=False)
-    
-    # Failure tracking
-    failed = fields.BooleanField(default=False)
-    failure_reason = fields.StringField(max_length=500)
-    retry_count = fields.IntField(default=0)
-    max_retries = fields.IntField(default=3)
-    
-    # Scheduling
-    scheduled_at = fields.DateTimeField()  # For delayed notifications
-    expires_at = fields.DateTimeField()    # Notification expiration
-    
-    # Action button (optional)
-    action_url = fields.URLField()  # Deep link or web URL
-    action_text = fields.StringField(max_length=50)  # Button text
+    is_sent = fields.BooleanField(default=False)  # For push notifications
     
     # Timestamps
     created_at = fields.DateTimeField(default=datetime.utcnow)
-    updated_at = fields.DateTimeField(default=datetime.utcnow)
+    read_at = fields.DateTimeField()
+    sent_at = fields.DateTimeField()
     
     meta = {
         'collection': 'notifications',
         'indexes': [
             'user',
             'type',
-            'event_type',
-            'priority',
-            'is_sent',
-            'is_delivered',
             'is_read',
-            'failed',
-            'scheduled_at',
-            'expires_at',
             'created_at',
-            [('user', 1), ('created_at', -1)],  # User's notifications by date
-            [('user', 1), ('is_read', 1)],      # User's unread notifications
-            [('scheduled_at', 1), ('is_sent', 1)],  # Pending scheduled notifications
+            [('user', 1), ('created_at', -1)],
+            [('user', 1), ('is_read', 1)],
         ]
     }
     
     def __str__(self):
-        return f"Notification {self.id} - {self.user} - {self.title}"
+        return f"Notification {self.id} - {self.user}"
+    
+    def mark_as_read(self):
+        """Mark notification as read"""
+        if not self.is_read:
+            self.is_read = True
+            self.read_at = datetime.utcnow()
+            self.save()
+    
+    def mark_as_sent(self):
+        """Mark notification as sent"""
+        if not self.is_sent:
+            self.is_sent = True
+            self.sent_at = datetime.utcnow()
+            self.save()
+
+
+class PushToken(Document):
+    """Store user's push notification tokens"""
+    
+    PLATFORM_CHOICES = [
+        ('ios', 'iOS'),
+        ('android', 'Android'),
+        ('web', 'Web'),
+    ]
+    
+    # ID
+    id = fields.UUIDField(primary_key=True, default=uuid.uuid4, binary=False)
+    
+    # User and token
+    user = fields.ReferenceField(User, required=True, reverse_delete_rule=1)
+    token = fields.StringField(required=True, unique=True)
+    platform = fields.StringField(choices=PLATFORM_CHOICES, required=True)
+    
+    # Status
+    is_active = fields.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = fields.DateTimeField(default=datetime.utcnow)
+    updated_at = fields.DateTimeField(default=datetime.utcnow)
+    last_used_at = fields.DateTimeField()
+    
+    meta = {
+        'collection': 'push_tokens',
+        'indexes': [
+            'user',
+            'token',
+            'is_active',
+            [('user', 1), ('is_active', 1)],
+        ]
+    }
+    
+    def __str__(self):
+        return f"PushToken {self.id} - {self.user} ({self.platform})"
     
     def save(self, *args, **kwargs):
         """Override save to update timestamps"""
@@ -121,67 +117,3 @@ class Notification(Document):
             self.created_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
         return super().save(*args, **kwargs)
-    
-    def get_title(self, language='tk'):
-        """Get title in specified language"""
-        if self.title_i18n and language in self.title_i18n:
-            return self.title_i18n[language]
-        return self.title
-    
-    def get_message(self, language='tk'):
-        """Get message in specified language"""
-        if self.message_i18n and language in self.message_i18n:
-            return self.message_i18n[language]
-        return self.message
-    
-    def mark_sent(self):
-        """Mark notification as sent"""
-        self.is_sent = True
-        self.sent_at = datetime.utcnow()
-        self.save()
-    
-    def mark_delivered(self):
-        """Mark notification as delivered"""
-        self.is_delivered = True
-        self.delivered_at = datetime.utcnow()
-        self.save()
-    
-    def mark_read(self):
-        """Mark notification as read"""
-        self.is_read = True
-        self.read_at = datetime.utcnow()
-        self.save()
-    
-    def mark_clicked(self):
-        """Mark notification as clicked"""
-        self.is_clicked = True
-        self.clicked_at = datetime.utcnow()
-        if not self.is_read:
-            self.mark_read()
-        self.save()
-    
-    def mark_failed(self, reason=""):
-        """Mark notification as failed"""
-        self.failed = True
-        self.failure_reason = reason
-        self.retry_count += 1
-        self.save()
-    
-    def can_retry(self):
-        """Check if notification can be retried"""
-        return self.failed and self.retry_count < self.max_retries
-    
-    def reset_for_retry(self):
-        """Reset notification for retry"""
-        if self.can_retry():
-            self.failed = False
-            self.failure_reason = ""
-            self.is_sent = False
-            self.sent_at = None
-            self.save()
-    
-    def is_expired(self):
-        """Check if notification has expired"""
-        if self.expires_at:
-            return datetime.utcnow() > self.expires_at
-        return False

@@ -1,175 +1,146 @@
 """
-Notification tasks for MongoDB
+Celery tasks for sending notifications
 """
 from celery import shared_task
+from apps.users.models import User
+from .fcm_utils import (
+    send_push_notification,
+    send_push_notification_multicast,
+    notify_booking_confirmed,
+    notify_tournament_reminder,
+    notify_match_invitation,
+)
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3)
-def send_booking_confirmation(self, booking_id):
+@shared_task
+def send_booking_confirmation_notification(user_id: str, booking_id: str, court_name: str, time: str):
     """Send booking confirmation notification"""
     try:
-        from apps.bookings.models import Booking
-        from apps.notifications.models import Notification
-        
-        booking = Booking.objects.get(id=booking_id)
-        user = booking.user
-        
-        # Create notification
-        notification = Notification(
-            user=user,
-            type='push',
-            event_type='booking_confirmed',
-            title='Booking Confirmed',
-            title_i18n={
-                'tk': 'Rezerwasiya tassyklandy',
-                'ru': 'Бронирование подтверждено', 
-                'en': 'Booking Confirmed'
-            },
-            message=f'Your booking at {booking.court.get_name()} is confirmed',
-            message_i18n={
-                'tk': f'{booking.court.get_name()} meýdanyndaky rezerwasiyanyňyz tassyklandy',
-                'ru': f'Ваше бронирование на {booking.court.get_name()} подтверждено',
-                'en': f'Your booking at {booking.court.get_name()} is confirmed'
-            },
-            payload={
-                'booking_id': str(booking.id),
-                'court_name': booking.court.get_name(),
-                'start_time': booking.start_time.isoformat(),
-                'end_time': booking.end_time.isoformat()
-            }
-        )
-        notification.save()
-        
-        logger.info(f"Booking confirmation notification created for booking {booking_id}")
-        return f"Notification sent for booking {booking_id}"
-        
-    except Exception as exc:
-        logger.error(f"Failed to send booking confirmation for {booking_id}: {exc}")
-        raise self.retry(exc=exc, countdown=60)
+        user = User.objects.get(id=user_id)
+        if user.fcm_token:
+            notify_booking_confirmed(
+                user_token=user.fcm_token,
+                booking_id=booking_id,
+                court_name=court_name,
+                time=time,
+            )
+            logger.info(f'Sent booking confirmation to user {user_id}')
+        else:
+            logger.warning(f'User {user_id} has no FCM token')
+    except User.DoesNotExist:
+        logger.error(f'User {user_id} not found')
+    except Exception as e:
+        logger.error(f'Error sending booking notification: {e}')
 
 
-@shared_task(bind=True, max_retries=3)
-def send_tournament_notification(self, tournament_id):
-    """Send tournament notification to relevant users"""
+@shared_task
+def send_tournament_reminder_notification(tournament_id: str, hours_before: int):
+    """Send tournament reminder to all participants"""
     try:
         from apps.tournaments.models import Tournament
-        from apps.notifications.models import Notification
-        from apps.users.models import User
         
         tournament = Tournament.objects.get(id=tournament_id)
+        participant_ids = [p.user_id for p in tournament.participants]
         
-        # Find users interested in tournaments (simplified)
-        users = User.objects.filter(
-            is_active=True,
-            goals__contains='tournament_info'
-        )[:100]  # Limit to 100 users
+        # Get users with FCM tokens
+        users = User.objects.filter(id__in=participant_ids, fcm_token__exists=True, fcm_token__ne='')
+        tokens = [user.fcm_token for user in users]
         
-        notifications = []
-        for user in users:
-            notification = Notification(
-                user=user,
-                type='push',
-                event_type='tournament_created',
-                title='New Tournament Available',
-                title_i18n={
-                    'tk': 'Täze ýaryş döredildi',
-                    'ru': 'Создан новый турнир',
-                    'en': 'New Tournament Available'
+        if tokens:
+            result = send_push_notification_multicast(
+                tokens=tokens,
+                title='Турнир скоро начнется',
+                body=f'{tournament.name} начнется через {hours_before} часов',
+                data={
+                    'type': 'tournament_reminder',
+                    'tournament_id': str(tournament_id),
                 },
-                message=f'{tournament.get_name()} - Register now!',
-                payload={
-                    'tournament_id': str(tournament.id),
-                    'tournament_name': tournament.get_name(),
-                    'start_date': tournament.start_date.isoformat()
-                }
             )
-            notifications.append(notification)
-        
-        # Bulk create notifications
-        for notification in notifications:
-            notification.save()
-        
-        logger.info(f"Tournament notification sent to {len(notifications)} users")
-        return f"Tournament notification sent to {len(notifications)} users"
-        
-    except Exception as exc:
-        logger.error(f"Failed to send tournament notification for {tournament_id}: {exc}")
-        raise self.retry(exc=exc, countdown=60)
+            logger.info(f'Sent tournament reminder: {result}')
+        else:
+            logger.warning(f'No users with FCM tokens for tournament {tournament_id}')
+            
+    except Exception as e:
+        logger.error(f'Error sending tournament reminder: {e}')
 
 
 @shared_task
-def cleanup_old_notifications():
-    """Clean up old notifications"""
+def send_match_invitation_notification(user_id: str, match_id: str, inviter_name: str):
+    """Send match invitation notification"""
     try:
-        from apps.notifications.models import Notification
-        from datetime import datetime, timedelta
-        
-        # Delete notifications older than 30 days
-        cutoff_date = datetime.utcnow() - timedelta(days=30)
-        
-        old_notifications = Notification.objects.filter(created_at__lt=cutoff_date)
-        count = old_notifications.count()
-        old_notifications.delete()
-        
-        logger.info(f"Cleaned up {count} old notifications")
-        return f"Cleaned up {count} old notifications"
-        
-    except Exception as exc:
-        logger.error(f"Failed to cleanup notifications: {exc}")
-        raise exc
+        user = User.objects.get(id=user_id)
+        if user.fcm_token:
+            notify_match_invitation(
+                user_token=user.fcm_token,
+                match_id=match_id,
+                inviter_name=inviter_name,
+            )
+            logger.info(f'Sent match invitation to user {user_id}')
+        else:
+            logger.warning(f'User {user_id} has no FCM token')
+    except User.DoesNotExist:
+        logger.error(f'User {user_id} not found')
+    except Exception as e:
+        logger.error(f'Error sending match invitation: {e}')
 
 
 @shared_task
-def send_booking_reminder():
-    """Send booking reminders for tomorrow's bookings"""
+def send_custom_notification(user_id: str, title: str, body: str, data: dict = None):
+    """Send custom notification to a user"""
     try:
-        from apps.bookings.models import Booking
-        from apps.notifications.models import Notification
-        from datetime import datetime, timedelta
-        
-        # Find bookings for tomorrow
-        tomorrow = datetime.utcnow() + timedelta(days=1)
-        tomorrow_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
-        tomorrow_end = tomorrow.replace(hour=23, minute=59, second=59)
-        
-        bookings = Booking.objects.filter(
-            start_time__gte=tomorrow_start,
-            start_time__lte=tomorrow_end,
-            status='confirmed'
-        )
-        
-        notifications = []
-        for booking in bookings:
-            notification = Notification(
-                user=booking.user,
-                type='push',
-                event_type='booking_reminder',
-                title='Booking Reminder',
-                title_i18n={
-                    'tk': 'Rezerwasiya ýatlatmasy',
-                    'ru': 'Напоминание о бронировании',
-                    'en': 'Booking Reminder'
-                },
-                message=f'You have a booking tomorrow at {booking.court.get_name()}',
-                payload={
-                    'booking_id': str(booking.id),
-                    'court_name': booking.court.get_name(),
-                    'start_time': booking.start_time.isoformat()
-                }
+        user = User.objects.get(id=user_id)
+        if user.fcm_token:
+            send_push_notification(
+                token=user.fcm_token,
+                title=title,
+                body=body,
+                data=data or {},
             )
-            notifications.append(notification)
+            logger.info(f'Sent custom notification to user {user_id}')
+        else:
+            logger.warning(f'User {user_id} has no FCM token')
+    except User.DoesNotExist:
+        logger.error(f'User {user_id} not found')
+    except Exception as e:
+        logger.error(f'Error sending custom notification: {e}')
+
+
+@shared_task
+def send_broadcast_notification(title: str, body: str, data: dict = None, user_ids: list = None):
+    """Send notification to multiple users or all active users"""
+    try:
+        # Get users
+        if user_ids:
+            users = User.objects.filter(id__in=user_ids, fcm_token__exists=True, fcm_token__ne='')
+        else:
+            users = User.objects.filter(is_active=True, fcm_token__exists=True, fcm_token__ne='')
         
-        # Save notifications
-        for notification in notifications:
-            notification.save()
+        tokens = [user.fcm_token for user in users]
         
-        logger.info(f"Sent {len(notifications)} booking reminders")
-        return f"Sent {len(notifications)} booking reminders"
+        if not tokens:
+            logger.warning('No users with FCM tokens found')
+            return
         
-    except Exception as exc:
-        logger.error(f"Failed to send booking reminders: {exc}")
-        raise exc
+        # Send in batches of 500 (FCM limit)
+        batch_size = 500
+        total_success = 0
+        total_failure = 0
+        
+        for i in range(0, len(tokens), batch_size):
+            batch_tokens = tokens[i:i + batch_size]
+            result = send_push_notification_multicast(
+                tokens=batch_tokens,
+                title=title,
+                body=body,
+                data=data or {},
+            )
+            total_success += result['success']
+            total_failure += result['failure']
+        
+        logger.info(f'Broadcast notification sent: {total_success} success, {total_failure} failure')
+        
+    except Exception as e:
+        logger.error(f'Error sending broadcast notification: {e}')

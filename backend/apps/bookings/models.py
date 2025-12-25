@@ -44,8 +44,15 @@ class Booking(Document):
     # Status
     status = fields.StringField(choices=STATUS_CHOICES, default='pending')
     
-    # Participants (other users involved)
-    participants = fields.ListField(fields.ReferenceField(User))
+    # Participants
+    number_of_players = fields.IntField(min_value=1, default=1)  # Total number of players in user's group
+    find_opponents = fields.BooleanField(default=False)  # Whether to find opponents
+    opponents_needed = fields.IntField(min_value=0, default=0)  # Number of opponents needed
+    participants = fields.ListField(fields.ReferenceField(User))  # Other users involved
+    
+    # Equipment rental
+    equipment_needed = fields.BooleanField(default=False)  # Whether equipment is needed
+    equipment_details = fields.DictField()  # Equipment details: {'rackets': 2, 'balls': 3, etc.}
     
     # Pricing
     tariff_snapshot = fields.DictField()  # Snapshot of tariff at booking time

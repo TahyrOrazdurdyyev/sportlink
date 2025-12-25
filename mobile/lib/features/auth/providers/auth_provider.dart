@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/user_model.dart';
 import '../data/repositories/auth_repository.dart';
+import '../../../core/services/firebase_messaging_service.dart';
+import '../../../core/services/api_service.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider));
+  return AuthNotifier(ref.read(authRepositoryProvider), ref.read(apiServiceProvider));
 });
 
 class AuthState {
@@ -40,8 +42,9 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final ApiService _apiService;
   
-  AuthNotifier(this._repository) : super(AuthState()) {
+  AuthNotifier(this._repository, this._apiService) : super(AuthState()) {
     _loadUser();
   }
   
@@ -50,6 +53,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.getCurrentUser();
       state = state.copyWith(user: user, isLoading: false);
+      
+      // Register FCM token if user is logged in
+      if (user != null) {
+        await FirebaseMessagingService.registerToken(_apiService);
+      }
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
     }
@@ -72,6 +80,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repository.verifyOTP(phone, otp);
       state = state.copyWith(user: user, isLoading: false);
+      
+      // Register FCM token after successful login
+      if (user != null) {
+        await FirebaseMessagingService.registerToken(_apiService);
+      }
+      
       return true;
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);
@@ -80,6 +94,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
   
   Future<void> logout() async {
+    // Unregister FCM token before logout
+    await FirebaseMessagingService.unregisterToken(_apiService);
+    
     await _repository.logout();
     state = AuthState();
   }

@@ -26,9 +26,26 @@ class CourtViewSet(MongoEngineModelViewSet, GeoQueryMixin):
             queryset = queryset.filter(type=court_type)
         
         # Filter by location and radius
-        lat = self.request.query_params.get('lat', type=float)
-        lng = self.request.query_params.get('lng', type=float)
-        radius_km = self.request.query_params.get('radius_km', type=float, default=10.0)
+        lat = self.request.query_params.get('lat')
+        lng = self.request.query_params.get('lng')
+        radius_km = self.request.query_params.get('radius_km', 10.0)
+        
+        # Convert to float if provided
+        if lat:
+            try:
+                lat = float(lat)
+            except (ValueError, TypeError):
+                lat = None
+        if lng:
+            try:
+                lng = float(lng)
+            except (ValueError, TypeError):
+                lng = None
+        if radius_km:
+            try:
+                radius_km = float(radius_km)
+            except (ValueError, TypeError):
+                radius_km = 10.0
         
         if lat and lng:
             queryset = self.filter_by_location(queryset, lat, lng, radius_km)
@@ -45,8 +62,20 @@ class CourtViewSet(MongoEngineModelViewSet, GeoQueryMixin):
         queryset = self.get_queryset()
         
         # Get user location for distance calculation
-        lat = request.query_params.get('lat', type=float)
-        lng = request.query_params.get('lng', type=float)
+        lat = request.query_params.get('lat')
+        lng = request.query_params.get('lng')
+        
+        # Convert to float if provided
+        if lat:
+            try:
+                lat = float(lat)
+            except (ValueError, TypeError):
+                lat = None
+        if lng:
+            try:
+                lng = float(lng)
+            except (ValueError, TypeError):
+                lng = None
         
         courts = list(queryset[:100])  # Limit results
         
@@ -71,14 +100,19 @@ class CourtViewSet(MongoEngineModelViewSet, GeoQueryMixin):
 class AdminCourtViewSet(MongoEngineModelViewSet):
     """Admin court CRUD"""
     serializer_class = CourtSerializer
-    permission_classes = [IsAuthenticated]  # Should be IsAdminUser
+    permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
+        """Get all courts for admin"""
         return Court.objects.all()
     
     def perform_create(self, serializer):
         """Set created_by to current user"""
-        serializer.save(created_by=self.request.user)
+        court = serializer.save()
+        if not court.created_by:
+            court.created_by = self.request.user
+            court.save()
+        return court
 
 
 @api_view(['GET'])

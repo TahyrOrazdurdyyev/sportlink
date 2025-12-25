@@ -1,22 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'firebase_options.dart';
 import 'core/config/app_config.dart';
-import 'core/localization/app_localizations.dart';
 import 'core/theme/app_theme.dart';
-import 'core/routing/providers.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
+import 'core/l10n/app_localizations.dart';
+import 'core/providers/locale_provider.dart';
+import 'core/services/firebase_messaging_service.dart';
+import 'features/auth/presentation/screens/auth_screen.dart';
+import 'features/auth/data/repositories/auth_repository.dart';
+import 'features/home/home_screen.dart';
+import 'features/profile/profile_screen.dart';
+import 'features/profile/edit_profile_screen.dart';
+import 'features/bookings/booking_history_screen.dart';
+import 'features/subscription/subscription_plans_screen.dart';
+import 'features/settings/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize Firebase
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   
   // Initialize app config
   await AppConfig.init();
+  
+  // Initialize Firebase Messaging
+  await FirebaseMessagingService.initialize();
   
   runApp(
     const ProviderScope(
@@ -36,6 +50,8 @@ class SportlinkApp extends ConsumerWidget {
       title: 'Sportlink',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      
+      // Localization support
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -44,11 +60,24 @@ class SportlinkApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('tk', 'TM'), // Turkmen
-        Locale('ru', 'RU'), // Russian
-        Locale('en', 'US'), // English
+        Locale('en'),
+        Locale('ru'),
+        Locale('tk'),
       ],
-      home: const LoginScreen(),
+      
+      // Routes
+      routes: {
+        '/auth': (context) => const AuthScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/edit-profile': (context) => const EditProfileScreen(),
+        '/booking-history': (context) => const BookingHistoryScreen(),
+        '/subscription': (context) => const SubscriptionPlansScreen(),
+        '/settings': (context) => const SettingsScreen(),
+      },
+      
+      // Start with Home screen (no auth required for browsing)
+      home: const HomeScreen(),
     );
   }
 }

@@ -1,2 +1,3 @@
-# Notifications app
-
+"""
+Notifications app
+"""

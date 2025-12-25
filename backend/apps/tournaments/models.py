@@ -41,13 +41,18 @@ class Tournament(Document):
     # Basic info
     name_i18n = fields.DictField(default=dict)  # Multilingual name
     description_i18n = fields.DictField(default=dict)  # Multilingual description
+    image_url = fields.StringField()  # Tournament poster/image (relative or absolute URL)
     
     # Venue
     courts = fields.ListField(fields.ReferenceField(Court))
     location_description = fields.StringField()  # Additional location info
+    country = fields.StringField(max_length=100)  # Country
+    city = fields.StringField(max_length=100)  # City
     
     # Organizer
+    organizer_name = fields.StringField(max_length=200)  # Organization name
     organizer_info = fields.DictField(default=dict)  # Contact info, etc.
+    registration_link = fields.URLField()  # External registration/info link (optional)
     created_by = fields.ReferenceField(User, required=True, reverse_delete_rule=2)  # NULLIFY
     
     # Schedule
@@ -61,7 +66,6 @@ class Tournament(Document):
     
     # Registration
     registration_open = fields.BooleanField(default=True)
-    registration_link = fields.URLField()  # External registration link (optional)
     registration_fee = fields.DecimalField(min_value=0, precision=2, default=0)
     
     # Participants
