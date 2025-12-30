@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/models/subscription_plan.dart';
 import '../../../core/services/subscription_service.dart';
+import '../../../core/l10n/app_localizations.dart';
+import '../../../core/providers/locale_provider.dart';
 
-class SubscriptionPlansScreen extends StatefulWidget {
+class SubscriptionPlansScreen extends ConsumerStatefulWidget {
   const SubscriptionPlansScreen({super.key});
 
   @override
-  State<SubscriptionPlansScreen> createState() =>
+  ConsumerState<SubscriptionPlansScreen> createState() =>
       _SubscriptionPlansScreenState();
 }
 
-class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
+class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScreen> {
   final ApiClient _apiClient = ApiClient();
   late SubscriptionService _subscriptionService;
 
@@ -598,7 +601,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                       Padding(
                         padding: const EdgeInsets.only(left: 26),
                         child: Text(
-                          '• Дни: ${plan.bookingLimits!.getAllowedDaysText()}',
+                          '• ${ref.watch(localeProvider).languageCode == 'ru' ? 'Дни' : ref.watch(localeProvider).languageCode == 'tk' ? 'Günler' : 'Days'}: ${plan.bookingLimits!.getAllowedDaysText(ref.watch(localeProvider).languageCode)}',
                           style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                         ),
                       ),

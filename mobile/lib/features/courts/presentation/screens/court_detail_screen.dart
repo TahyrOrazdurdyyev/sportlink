@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/court.dart';
 import '../../../../core/services/court_service.dart';
+import '../../../bookings/presentation/screens/create_booking_screen.dart';
 
 class CourtDetailScreen extends ConsumerStatefulWidget {
   final String courtId;
@@ -76,8 +77,10 @@ class _CourtDetailScreenState extends ConsumerState<CourtDetailScreen> {
                           ],
                           ElevatedButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Booking coming soon!')),
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => CreateBookingScreen(court: _court!),
+                                ),
                               );
                             },
                             child: const Text('Book Now'),

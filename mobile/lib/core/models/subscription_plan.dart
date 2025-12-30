@@ -22,11 +22,19 @@ class BookingLimits {
     return allowedDays!.contains(dayOfWeek);
   }
 
-  String getAllowedDaysText() {
-    if (allowedDays == null || allowedDays!.isEmpty) return 'All days';
-    if (allowedDays!.length == 7) return 'All days';
+  String getAllowedDaysText(String locale) {
+    if (allowedDays == null || allowedDays!.isEmpty) {
+      return locale == 'ru' ? 'Все дни' : locale == 'tk' ? 'Ähli günler' : 'All days';
+    }
+    if (allowedDays!.length == 7) {
+      return locale == 'ru' ? 'Все дни' : locale == 'tk' ? 'Ähli günler' : 'All days';
+    }
     
-    final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final dayNames = locale == 'ru' 
+        ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+        : locale == 'tk'
+        ? ['Du', 'Si', 'Ça', 'Pe', 'An', 'Şe', 'Ýe']
+        : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return allowedDays!.map((d) => dayNames[d - 1]).join(', ');
   }
 }

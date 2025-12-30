@@ -431,9 +431,9 @@ export default function UsersPage() {
               <TableCell sx={{ minWidth: 120 }}>{t('phone')}</TableCell>
               <TableCell sx={{ minWidth: 150 }}>{t('name')}</TableCell>
               <TableCell sx={{ minWidth: 100 }}>{t('status')}</TableCell>
-              <TableCell sx={{ minWidth: 140 }}>Subscription</TableCell>
-              <TableCell sx={{ minWidth: 110 }}>Expires</TableCell>
-              <TableCell sx={{ minWidth: 80 }} align="center">Requests</TableCell>
+              <TableCell sx={{ minWidth: 140 }}>{t('subscription')}</TableCell>
+              <TableCell sx={{ minWidth: 110 }}>{t('expires')}</TableCell>
+              <TableCell sx={{ minWidth: 80 }} align="center">{t('requests')}</TableCell>
               <TableCell sx={{ minWidth: 120 }} align="right">{t('actions')}</TableCell>
             </TableRow>
           </TableHead>
@@ -441,13 +441,13 @@ export default function UsersPage() {
             {loading ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  Loading...
+                  {t('loading')}...
                 </TableCell>
               </TableRow>
             ) : filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} align="center">
-                  {searchQuery ? 'No users found matching your search' : 'No users found'}
+                  {searchQuery ? t('no_users_found_search') : t('no_users_found')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -475,17 +475,17 @@ export default function UsersPage() {
                       </Typography>
                     )}
                     <Box display="flex" gap={0.5} flexWrap="wrap" mt={0.5}>
-                      {user.is_superuser && <Chip label="Super" color="error" size="small" />}
-                      {user.is_staff && <Chip label="Staff" color="primary" size="small" />}
+                      {user.is_superuser && <Chip label={t('super')} color="error" size="small" />}
+                      {user.is_staff && <Chip label={t('staff')} color="primary" size="small" />}
                     </Box>
                   </TableCell>
                   <TableCell>
                     {user.is_banned ? (
-                      <Chip label="Banned" color="error" size="small" />
+                      <Chip label={t('banned')} color="error" size="small" />
                     ) : user.is_active ? (
-                      <Chip label="Active" color="success" size="small" />
+                      <Chip label={t('active')} color="success" size="small" />
                     ) : (
-                      <Chip label="Inactive" color="default" size="small" />
+                      <Chip label={t('inactive')} color="default" size="small" />
                     )}
                   </TableCell>
                   <TableCell>
@@ -496,7 +496,7 @@ export default function UsersPage() {
                         size="small" 
                       />
                     ) : (
-                      <Chip label="None" color="default" size="small" />
+                      <Chip label={t('none')} color="default" size="small" />
                     )}
                   </TableCell>
                   <TableCell>
@@ -862,7 +862,7 @@ export default function UsersPage() {
                   <strong>Subscription will be active for:</strong> {subscriptionFormData.duration_days} days
                   <br />
                   <strong>End date:</strong> {new Date(Date.now() + subscriptionFormData.duration_days * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                </Typography>
+      </Typography>
               </Box>
             )}
           </Box>

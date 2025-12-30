@@ -61,18 +61,28 @@ class BookingService {
     required String courtId,
     required DateTime startTime,
     required DateTime endTime,
+    int numberOfPlayers = 1,
+    bool findOpponents = false,
+    int opponentsNeeded = 0,
+    bool equipmentNeeded = false,
+    Map<String, int>? equipmentDetails,
     String? notes,
   }) async {
     try {
-      final response = await _apiClient.dio.post(
-        '/bookings/',
-        data: {
-          'court': courtId,
-          'start_time': startTime.toIso8601String(),
-          'end_time': endTime.toIso8601String(),
-          'notes': notes,
-        },
-      );
+      final data = {
+        'court': courtId,
+        'start_time': startTime.toIso8601String(),
+        'end_time': endTime.toIso8601String(),
+        'number_of_players': numberOfPlayers,
+        'find_opponents': findOpponents,
+        'opponents_needed': opponentsNeeded,
+        'equipment_needed': equipmentNeeded,
+        if (equipmentDetails != null && equipmentDetails.isNotEmpty)
+          'equipment_details': equipmentDetails,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      };
+      
+      final response = await _apiClient.dio.post('/bookings/', data: data);
       return Booking.fromJson(response.data);
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data is Map) {

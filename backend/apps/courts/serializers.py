@@ -120,17 +120,33 @@ class CourtSerializer(MongoEngineModelSerializer):
 class CourtListSerializer(MongoEngineModelSerializer):
     """Court list serializer (minimal fields)"""
     distance = serializers.SerializerMethodField()
+    category_info = serializers.SerializerMethodField()
     
     class Meta:
         model = Court
         fields = [
             'id', 'name_i18n', 'address', 'type', 'images',
-            'is_active', 'distance'
+            'is_active', 'distance', 'category_info'
         ]
     
     def get_distance(self, obj):
         """Calculate distance from user location"""
         return getattr(obj, '_distance', None)
+    
+    def get_category_info(self, obj):
+        """Get category information including available equipment"""
+        from apps.categories.models import Category
+        if obj.type:
+            try:
+                category = Category.objects.get(id=obj.type)
+                return {
+                    'id': str(category.id),
+                    'name_i18n': category.name_i18n,
+                    'available_equipment': category.available_equipment or []
+                }
+            except Category.DoesNotExist:
+                return None
+        return None
     
     def to_representation(self, instance):
         """Convert relative image URLs to absolute"""
@@ -154,14 +170,30 @@ class CourtListSerializer(MongoEngineModelSerializer):
 class CourtDetailSerializer(MongoEngineModelSerializer):
     """Detailed court serializer"""
     availability = serializers.SerializerMethodField()
+    category_info = serializers.SerializerMethodField()
     
     class Meta:
         model = Court
         fields = [
             'id', 'name_i18n', 'address', 'location', 'type', 'owner',
-            'attributes', 'images', 'tariffs', 'availability',
+            'attributes', 'images', 'tariffs', 'availability', 'category_info',
             'is_active', 'created_at'
         ]
+    
+    def get_category_info(self, obj):
+        """Get category information including available equipment"""
+        from apps.categories.models import Category
+        if obj.type:
+            try:
+                category = Category.objects.get(id=obj.type)
+                return {
+                    'id': str(category.id),
+                    'name_i18n': category.name_i18n,
+                    'available_equipment': category.available_equipment or []
+                }
+            except Category.DoesNotExist:
+                return None
+        return None
     
     def get_availability(self, obj):
         """Get today's availability"""

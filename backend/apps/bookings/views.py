@@ -52,13 +52,24 @@ class BookingViewSet(MongoEngineModelViewSet):
         
         # Check equipment rental feature
         if equipment_needed:
+            from apps.subscriptions.models import SubscriptionPlan
+            
             if not validator.subscription:
                 return Response({
                     'error': 'No active subscription',
                     'detail': 'You need an active subscription to rent equipment'
                 }, status=status.HTTP_403_FORBIDDEN)
             
-            plan = validator.subscription.plan
+            # Get plan object (handle dbref=False)
+            try:
+                plan_id = validator.subscription.plan.id if hasattr(validator.subscription.plan, 'id') else validator.subscription.plan
+                plan = SubscriptionPlan.objects.get(id=plan_id)
+            except SubscriptionPlan.DoesNotExist:
+                return Response({
+                    'error': 'Subscription plan not found',
+                    'detail': 'Your subscription plan could not be found'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
             if not plan.features.get('equipment_rental', False):
                 return Response({
                     'error': 'Equipment rental not available',

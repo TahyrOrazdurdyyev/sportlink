@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sportlink/core/models/booking.dart';
 import 'package:sportlink/core/services/booking_service.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-class BookingHistoryScreen extends StatefulWidget {
+class BookingHistoryScreen extends ConsumerStatefulWidget {
   const BookingHistoryScreen({Key? key}) : super(key: key);
 
   @override
-  State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
+  ConsumerState<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
 }
 
-class _BookingHistoryScreenState extends State<BookingHistoryScreen> with SingleTickerProviderStateMixin {
+class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> with SingleTickerProviderStateMixin {
   final BookingService _bookingService = BookingService();
   late TabController _tabController;
   
@@ -62,19 +64,20 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> with Single
   }
 
   Future<void> _cancelBooking(Booking booking) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking?'),
+        title: Text(l10n.translate('cancel_booking')),
+        content: Text('Are you sure you want to cancel this booking?'), // TODO: Add to localization
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+            child: Text(l10n.translate('no')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.translate('yes'), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -85,14 +88,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> with Single
         await _bookingService.cancelBooking(booking.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Booking cancelled successfully')),
+            SnackBar(content: Text(l10n.translate('booking_cancelled_successfully'))),
           );
           _loadBookings(); // Reload bookings
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
+            SnackBar(content: Text('${l10n.translate('error')}: $e')),
           );
         }
       }
@@ -101,15 +104,16 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> with Single
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking History'),
+        title: Text(l10n.translate('booking_history')),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Past'),
+          tabs: [
+            Tab(text: 'All'), // TODO: Add to localization
+            Tab(text: l10n.translate('upcoming')),
+            Tab(text: l10n.translate('past')),
           ],
         ),
       ),
@@ -151,7 +155,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> with Single
             Icon(Icons.calendar_today, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No bookings found',
+              l10n.translate('no_bookings'),
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -433,7 +437,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> with Single
                       _cancelBooking(booking);
                     },
                     icon: const Icon(Icons.cancel),
-                    label: const Text('Cancel Booking'),
+                    label: Text(l10n.translate('cancel_booking')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,

@@ -46,7 +46,21 @@ class BookingValidator:
     
     def _check_feature_access(self):
         """Check if subscription includes court booking"""
-        if not self.subscription.plan.features.get('court_booking', False):
+        from apps.subscriptions.models import SubscriptionPlan
+        
+        # Get plan object (handle dbref=False)
+        try:
+            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+        except SubscriptionPlan.DoesNotExist:
+            self.errors.append({
+                'code': 'PLAN_NOT_FOUND',
+                'message': 'Subscription plan not found',
+                'field': 'subscription'
+            })
+            return
+        
+        if not plan.features.get('court_booking', False):
             self.errors.append({
                 'code': 'FEATURE_NOT_AVAILABLE',
                 'message': 'Your subscription does not include court booking',
@@ -55,7 +69,16 @@ class BookingValidator:
     
     def _check_day_restriction(self):
         """Check if booking day is allowed by subscription"""
-        booking_limits = self.subscription.plan.booking_limits or {}
+        from apps.subscriptions.models import SubscriptionPlan
+        
+        # Get plan object (handle dbref=False)
+        try:
+            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+        except SubscriptionPlan.DoesNotExist:
+            return
+        
+        booking_limits = plan.booking_limits or {}
         allowed_days = booking_limits.get('allowed_days', [])
         
         if allowed_days and self.day_of_week not in allowed_days:
@@ -72,7 +95,16 @@ class BookingValidator:
     
     def _check_duration_limit(self):
         """Check if booking duration exceeds subscription limit"""
-        booking_limits = self.subscription.plan.booking_limits or {}
+        from apps.subscriptions.models import SubscriptionPlan
+        
+        # Get plan object (handle dbref=False)
+        try:
+            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+        except SubscriptionPlan.DoesNotExist:
+            return
+        
+        booking_limits = plan.booking_limits or {}
         max_duration = booking_limits.get('max_duration_hours', 0)
         
         if max_duration > 0 and self.duration_hours > max_duration:
@@ -86,7 +118,16 @@ class BookingValidator:
     
     def _check_weekly_limit(self):
         """Check if user has reached weekly booking limit (calendar week: Monday-Sunday)"""
-        booking_limits = self.subscription.plan.booking_limits or {}
+        from apps.subscriptions.models import SubscriptionPlan
+        
+        # Get plan object (handle dbref=False)
+        try:
+            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+        except SubscriptionPlan.DoesNotExist:
+            return
+        
+        booking_limits = plan.booking_limits or {}
         bookings_per_week = booking_limits.get('bookings_per_week', 0)
         
         if bookings_per_week > 0:
@@ -164,10 +205,19 @@ class BookingValidator:
     
     def get_weekly_booking_info(self):
         """Get detailed information about user's weekly bookings"""
+        from apps.subscriptions.models import SubscriptionPlan
+        
         if not self.subscription:
             return None
         
-        booking_limits = self.subscription.plan.booking_limits or {}
+        # Get plan object (handle dbref=False)
+        try:
+            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan = SubscriptionPlan.objects.get(id=plan_id)
+        except SubscriptionPlan.DoesNotExist:
+            return None
+        
+        booking_limits = plan.booking_limits or {}
         bookings_per_week = booking_limits.get('bookings_per_week', 0)
         
         if bookings_per_week == 0:

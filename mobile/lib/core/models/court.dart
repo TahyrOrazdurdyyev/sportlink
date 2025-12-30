@@ -9,6 +9,7 @@ class Court {
   final List<String>? images;
   final Map<String, dynamic>? features;
   final bool? isActive;
+  final CategoryInfo? categoryInfo; // Added category info with equipment
 
   Court({
     required this.id,
@@ -21,6 +22,7 @@ class Court {
     this.images,
     this.features,
     this.isActive,
+    this.categoryInfo,
   });
 
   factory Court.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,9 @@ class Court {
               ? json['is_active'] as bool
               : (json['is_active'] as num) != 0)
           : null,
+      categoryInfo: json['category_info'] != null
+          ? CategoryInfo.fromJson(json['category_info'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -56,6 +61,56 @@ class Court {
 
   String? getDescription(String locale) {
     return descriptionI18n?[locale] ?? descriptionI18n?['en'] ?? descriptionI18n?['ru'];
+  }
+  
+  List<EquipmentItem> getAvailableEquipment() {
+    return categoryInfo?.availableEquipment ?? [];
+  }
+}
+
+// Category info with equipment
+class CategoryInfo {
+  final String id;
+  final Map<String, String> nameI18n;
+  final List<EquipmentItem> availableEquipment;
+
+  CategoryInfo({
+    required this.id,
+    required this.nameI18n,
+    required this.availableEquipment,
+  });
+
+  factory CategoryInfo.fromJson(Map<String, dynamic> json) {
+    final equipmentList = json['available_equipment'] as List? ?? [];
+    return CategoryInfo(
+      id: json['id'] as String,
+      nameI18n: Map<String, String>.from(json['name_i18n'] ?? {}),
+      availableEquipment: equipmentList
+          .map((e) => EquipmentItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+// Equipment item (e.g., "balls", "rackets", "shin guards")
+class EquipmentItem {
+  final String key; // e.g., "balls", "rackets"
+  final Map<String, String> nameI18n; // e.g., {"en": "Balls", "ru": "Мячи", "tk": "Toplar"}
+
+  EquipmentItem({
+    required this.key,
+    required this.nameI18n,
+  });
+
+  factory EquipmentItem.fromJson(Map<String, dynamic> json) {
+    return EquipmentItem(
+      key: json['key'] as String,
+      nameI18n: Map<String, String>.from(json['name_i18n'] ?? {}),
+    );
+  }
+
+  String getName(String locale) {
+    return nameI18n[locale] ?? nameI18n['en'] ?? nameI18n['ru'] ?? key;
   }
 }
 

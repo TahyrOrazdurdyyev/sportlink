@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sportlink/features/auth/data/repositories/auth_repository.dart';
 import 'package:sportlink/features/auth/data/models/user_model.dart';
 import 'package:sportlink/core/config/app_config.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
+import 'package:sportlink/core/providers/locale_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -57,15 +59,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
   }
 
   Future<void> _handleLogout() async {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(l10n.translate('logout')),
+        content: Text('Are you sure you want to logout?'), // TODO: Add to localization
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.translate('cancel')),
           ),
           TextButton(
             onPressed: () async {
@@ -78,7 +81,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                 Navigator.of(context).pushReplacementNamed('/auth');
               }
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.translate('logout'), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -88,6 +91,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+    final l10n = AppLocalizations.of(context);
     
     if (_isLoading) {
       return const Scaffold(
@@ -104,16 +108,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
             children: [
               const Icon(Icons.person_outline, size: 100, color: Colors.grey),
               const SizedBox(height: 24),
-              const Text(
-                'Please login to view your profile',
-                style: TextStyle(fontSize: 18),
+              Text(
+                'Please login to view your profile', // TODO: Add to localization
+                style: const TextStyle(fontSize: 18),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/auth');
                 },
-                child: const Text('Login / Sign Up'),
+                child: Text('${l10n.translate('login')} / ${l10n.translate('sign_up')}'),
               ),
             ],
           ),
@@ -130,9 +134,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
-          'Profile',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          l10n.translate('profile'),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: SingleChildScrollView(
@@ -232,7 +236,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   // Action Buttons
                   _buildActionButton(
                     icon: Icons.edit,
-                    label: 'Edit Profile',
+                    label: l10n.translate('edit_profile'),
                     onTap: () {
                       Navigator.pushNamed(context, '/edit-profile');
                     },
@@ -240,7 +244,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   const SizedBox(height: 12),
                   _buildActionButton(
                     icon: Icons.history,
-                    label: 'Booking History',
+                    label: l10n.translate('booking_history'),
                     onTap: () {
                       Navigator.pushNamed(context, '/booking-history');
                     },
@@ -248,7 +252,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   const SizedBox(height: 12),
                   _buildActionButton(
                     icon: Icons.star,
-                    label: 'Subscription',
+                    label: l10n.translate('subscription'),
                     onTap: () {
                       Navigator.pushNamed(context, '/subscription');
                     },
@@ -256,7 +260,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   const SizedBox(height: 12),
                   _buildActionButton(
                     icon: Icons.settings,
-                    label: 'Settings',
+                    label: l10n.translate('settings'),
                     onTap: () {
                       Navigator.pushNamed(context, '/settings');
                     },
@@ -273,9 +277,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text(
-                        'Logout',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.translate('logout'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

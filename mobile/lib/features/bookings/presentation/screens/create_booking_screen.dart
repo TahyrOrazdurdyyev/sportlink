@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/models/court.dart';
-import '../../../../core/models/subscription_plan.dart';
-import '../../../../core/services/api_service.dart';
+import '../../../../core/services/booking_service.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/l10n/app_localizations.dart';
-import '../../../auth/providers/auth_provider.dart';
 
 class CreateBookingScreen extends ConsumerStatefulWidget {
   final Court court;
@@ -17,603 +16,742 @@ class CreateBookingScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
-  DateTime? _selectedDate;
-  TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
+  final BookingService _bookingService = BookingService();
+  final _notesController = TextEditingController();
+  final Map<String, TextEditingController> _equipmentControllers = {};
+  
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _startTime = TimeOfDay.now();
+  TimeOfDay _endTime = TimeOfDay(hour: TimeOfDay.now().hour + 1, minute: TimeOfDay.now().minute);
+  
   int _numberOfPlayers = 1;
   bool _findOpponents = false;
   int _opponentsNeeded = 0;
   bool _equipmentNeeded = false;
-  final Map<String, int> _equipmentDetails = {};
-  String? _notes;
+  
   bool _isLoading = false;
-  String? _error;
-  SubscriptionPlan? _userPlan;
-  bool _hasEquipmentFeature = false;
-
-  // Equipment items
-  final Map<String, TextEditingController> _equipmentControllers = {
-    'rackets': TextEditingController(text: '0'),
-    'balls': TextEditingController(text: '0'),
-  };
-
+  bool _checkingAvailability = false;
+  bool? _isAvailable;
+  
   @override
   void initState() {
     super.initState();
-    _loadUserSubscription();
+    _initializeEquipmentControllers();
+  }
+  
+  void _initializeEquipmentControllers() {
+    // Create controllers for each available equipment item
+    final equipment = widget.court.getAvailableEquipment();
+    for (var item in equipment) {
+      _equipmentControllers[item.key] = TextEditingController(text: '0');
+    }
   }
 
   @override
   void dispose() {
+    _notesController.dispose();
     for (var controller in _equipmentControllers.values) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  Future<void> _loadUserSubscription() async {
-    try {
-      final authState = ref.read(authProvider);
-      if (authState.user?.activeSubscription != null) {
-        final apiService = ref.read(apiServiceProvider);
-        final response = await apiService.get(
-          '/subscriptions/plans/${authState.user!.activeSubscription!.planId}/',
-        );
-        
-        if (response.statusCode == 200) {
-          setState(() {
-            _userPlan = SubscriptionPlan.fromJson(response.data);
-            _hasEquipmentFeature = _userPlan?.features['equipment_rental'] ?? false;
-          });
-        }
-      }
-    } catch (e) {
-      // Silently fail, user might not have subscription
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 90)),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectStartTime(BuildContext context) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _startTime ?? TimeOfDay.now(),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _startTime = picked;
-      });
-    }
-  }
-
-  Future<void> _selectEndTime(BuildContext context) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _endTime ?? (_startTime ?? TimeOfDay.now()),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _endTime = picked;
-      });
-    }
-  }
-
-  DateTime _combineDateTime(DateTime date, TimeOfDay time) {
+  DateTime _combineDateAndTime(DateTime date, TimeOfDay time) {
     return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
-  Future<void> _showMatchedOpponentsDialog(List matchedOpponents) async {
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.people, color: Theme.of(context).primaryColor),
-            const SizedBox(width: 12),
-            const Text('Opponent(s) Found!'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Great news! We found opponent(s) for your match:',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            ...matchedOpponents.map((opponent) {
-              final nickname = opponent['nickname'] as String;
-              final firstName = opponent['first_name'] as String? ?? '';
-              final lastName = opponent['last_name'] as String? ?? '';
-              final fullName = '$firstName $lastName'.trim();
+  Future<void> _checkAvailability() async {
+    final startDateTime = _combineDateAndTime(_selectedDate, _startTime);
+    final endDateTime = _combineDateAndTime(_selectedDate, _endTime);
 
-              return Card(
-                color: Colors.green[50],
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.green,
-                    child: Text(
-                      nickname[0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    '@$nickname',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: fullName.isNotEmpty ? Text(fullName) : null,
-                ),
-              );
-            }).toList(),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue[700]),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Both you and your opponent(s) have been notified about the match!',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it!'),
-          ),
-        ],
-      ),
-    );
+    if (endDateTime.isBefore(startDateTime) || endDateTime.isAtSameMomentAs(startDateTime)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End time must be after start time')),
+      );
+      return;
+    }
+
+    setState(() {
+      _checkingAvailability = true;
+      _isAvailable = null;
+    });
+
+    try {
+      final available = await _bookingService.checkAvailability(
+        courtId: widget.court.id,
+        startTime: startDateTime,
+        endTime: endDateTime,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isAvailable = available;
+          _checkingAvailability = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _checkingAvailability = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking availability: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _createBooking() async {
-    // Validation
-    if (_selectedDate == null || _startTime == null || _endTime == null) {
-      setState(() {
-        _error = AppLocalizations.of(context).pleaseSelectDateTime;
-      });
-      return;
-    }
-
-    final startDateTime = _combineDateTime(_selectedDate!, _startTime!);
-    final endDateTime = _combineDateTime(_selectedDate!, _endTime!);
+    final startDateTime = _combineDateAndTime(_selectedDate, _startTime);
+    final endDateTime = _combineDateAndTime(_selectedDate, _endTime);
 
     if (endDateTime.isBefore(startDateTime) || endDateTime.isAtSameMomentAs(startDateTime)) {
-      setState(() {
-        _error = AppLocalizations.of(context).endTimeMustBeAfterStart;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('End time must be after start time')),
+      );
       return;
     }
 
+    if (_isAvailable == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selected time slot is not available')),
+      );
+      return;
+    }
+
+    // Validate opponents logic
     if (_findOpponents && _opponentsNeeded <= 0) {
-      setState(() {
-        _error = AppLocalizations.of(context).pleaseSpecifyOpponentsNeeded;
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please specify number of opponents needed')),
+      );
       return;
     }
 
-    // Validate equipment
+    // Prepare equipment details if needed
+    Map<String, int>? equipmentDetails;
     if (_equipmentNeeded) {
-      _equipmentDetails.clear();
+      // Only validate if court has available equipment
+      if (widget.court.getAvailableEquipment().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No equipment available for this sport')),
+        );
+        return;
+      }
+      
+      equipmentDetails = {};
+      bool hasEquipment = false;
+      
       for (var entry in _equipmentControllers.entries) {
         final quantity = int.tryParse(entry.value.text) ?? 0;
         if (quantity > 0) {
-          _equipmentDetails[entry.key] = quantity;
+          equipmentDetails[entry.key] = quantity;
+          hasEquipment = true;
         }
       }
-
-      if (_equipmentDetails.isEmpty) {
-        setState(() {
-          _error = AppLocalizations.of(context).pleaseSpecifyEquipment;
-        });
+      
+      if (!hasEquipment) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please specify equipment quantity')),
+        );
         return;
       }
     }
 
     setState(() {
       _isLoading = true;
-      _error = null;
     });
 
     try {
-      final apiService = ref.read(apiServiceProvider);
-      final payload = {
-        'court': widget.court.id,
-        'start_time': startDateTime.toIso8601String(),
-        'end_time': endDateTime.toIso8601String(),
-        'number_of_players': _numberOfPlayers,
-        'find_opponents': _findOpponents,
-        'opponents_needed': _findOpponents ? _opponentsNeeded : 0,
-        'equipment_needed': _equipmentNeeded,
-        'equipment_details': _equipmentNeeded ? _equipmentDetails : {},
-        'notes': _notes,
-      };
+      final booking = await _bookingService.createBooking(
+        courtId: widget.court.id,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        numberOfPlayers: _numberOfPlayers,
+        findOpponents: _findOpponents,
+        opponentsNeeded: _findOpponents ? _opponentsNeeded : 0,
+        equipmentNeeded: _equipmentNeeded,
+        equipmentDetails: equipmentDetails,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      );
 
-      final response = await apiService.post('/bookings/', data: payload);
-
-      if (response.statusCode == 201) {
-        if (mounted) {
-          // Check if opponents were matched
-          final matchesFound = response.data['matches_found'] as int?;
-          final matchedOpponents = response.data['matched_opponents'] as List?;
-
-          if (matchesFound != null && matchesFound > 0 && matchedOpponents != null) {
-            // Show dialog with matched opponents
-            await _showMatchedOpponentsDialog(matchedOpponents);
-          }
-
-          Navigator.pop(context, true); // Return true to indicate success
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context).bookingCreatedSuccessfully),
-              backgroundColor: Colors.green,
-            ),
-          );
+      if (mounted) {
+        // Check if opponents were found
+        final matchesFound = booking.toJson()['matches_found'] as int? ?? 0;
+        
+        String successMessage = 'Booking created successfully!';
+        if (_findOpponents && matchesFound > 0) {
+          successMessage += ' Found $matchesFound opponent(s)!';
+        } else if (_findOpponents && matchesFound == 0) {
+          successMessage += ' No opponents found yet. You will be notified when someone matches.';
         }
-      } else {
-        throw Exception(response.data['error'] ?? 'Failed to create booking');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        Navigator.of(context).pop(true); // Return true to indicate success
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        // Parse error message for better user feedback
+        String errorMessage = e.toString();
+        if (errorMessage.contains('WEEKLY_LIMIT_REACHED')) {
+          errorMessage = 'Weekly booking limit reached. Please try again next week.';
+        } else if (errorMessage.contains('DURATION_EXCEEDS_LIMIT')) {
+          errorMessage = 'Booking duration exceeds your plan limit.';
+        } else if (errorMessage.contains('DAY_NOT_ALLOWED')) {
+          errorMessage = 'Your plan does not allow bookings on this day.';
+        } else if (errorMessage.contains('equipment_rental')) {
+          errorMessage = 'Your plan does not include equipment rental.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+    );
+    
+    if (picked != null && picked != _selectedDate) {
       setState(() {
-        _error = e.toString();
-        _isLoading = false;
+        _selectedDate = picked;
+        _isAvailable = null; // Reset availability when date changes
+      });
+    }
+  }
+
+  Future<void> _selectStartTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime,
+    );
+    
+    if (picked != null && picked != _startTime) {
+      setState(() {
+        _startTime = picked;
+        _isAvailable = null; // Reset availability when time changes
+      });
+    }
+  }
+
+  Future<void> _selectEndTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _endTime,
+    );
+    
+    if (picked != null && picked != _endTime) {
+      setState(() {
+        _endTime = picked;
+        _isAvailable = null; // Reset availability when time changes
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context);
-    final courtName = widget.court.getName(locale.languageCode);
+    final locale = ref.watch(localeProvider);
+    final courtName = widget.court.nameI18n[locale.languageCode] ?? 
+                      widget.court.nameI18n['en'] ?? 
+                      'Unknown Court';
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).createBooking),
+        title: Text(l10n.translate('book_court')),
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Court Info
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Court Info Card
+            Card(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      courtName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (widget.court.address != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
-                          Icon(Icons.sports_tennis, color: Theme.of(context).primaryColor, size: 40),
-                          const SizedBox(width: 16),
+                          const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  courtName,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                if (widget.court.location != null)
-                                  Text(
-                                    widget.court.location!,
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
-                              ],
+                            child: Text(
+                              widget.court.address!,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey[600],
+                              ),
                             ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Date Selection
+            Text(
+              'Select Date',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: _selectDate,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.blue),
+                    const SizedBox(width: 12),
+                    Text(
+                      DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Time Selection
+            Text(
+              'Select Time',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: _selectStartTime,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Start Time',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _startTime.format(context),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-
-                  // Date & Time Selection
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: InkWell(
+                    onTap: _selectEndTime,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'End Time',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _endTime.format(context),
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Check Availability Button
+            OutlinedButton.icon(
+              onPressed: _checkingAvailability ? null : _checkAvailability,
+              icon: _checkingAvailability 
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.search),
+              label: Text(_checkingAvailability ? 'Checking...' : 'Check Availability'),
+            ),
+            
+            if (_isAvailable != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _isAvailable! ? Colors.green[50] : Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _isAvailable! ? Colors.green : Colors.red,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isAvailable! ? Icons.check_circle : Icons.cancel,
+                      color: _isAvailable! ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _isAvailable! 
+                            ? 'This time slot is available!' 
+                            : 'This time slot is not available',
+                        style: TextStyle(
+                          color: _isAvailable! ? Colors.green[900] : Colors.red[900],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
+            const SizedBox(height: 24),
+            
+            // Number of Players
+            Text(
+              'Number of Players',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.people, color: Colors.blue),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'How many people in your group?',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _numberOfPlayers > 1
+                        ? () => setState(() => _numberOfPlayers--)
+                        : null,
+                    icon: const Icon(Icons.remove_circle_outline),
+                    color: Colors.blue,
+                  ),
                   Text(
-                    AppLocalizations.of(context).dateAndTime,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    '$_numberOfPlayers',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  
-                  // Date
-                  ListTile(
-                    leading: const Icon(Icons.calendar_today),
-                    title: Text(_selectedDate != null
-                        ? DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate!)
-                        : AppLocalizations.of(context).selectDate),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _selectDate(context),
-                    tileColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  IconButton(
+                    onPressed: () => setState(() => _numberOfPlayers++),
+                    icon: const Icon(Icons.add_circle_outline),
+                    color: Colors.blue,
                   ),
-                  const SizedBox(height: 12),
-
-                  // Start Time
-                  ListTile(
-                    leading: const Icon(Icons.access_time),
-                    title: Text(_startTime != null
-                        ? '${AppLocalizations.of(context).startTime}: ${_startTime!.format(context)}'
-                        : AppLocalizations.of(context).selectStartTime),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _selectStartTime(context),
-                    tileColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // End Time
-                  ListTile(
-                    leading: const Icon(Icons.access_time),
-                    title: Text(_endTime != null
-                        ? '${AppLocalizations.of(context).endTime}: ${_endTime!.format(context)}'
-                        : AppLocalizations.of(context).selectEndTime),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _selectEndTime(context),
-                    tileColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Number of Players
-                  Text(
-                    AppLocalizations.of(context).numberOfPlayers,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Find Opponents
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+                color: _findOpponents ? Colors.blue[50] : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: _numberOfPlayers > 1
-                            ? () => setState(() => _numberOfPlayers--)
-                            : null,
+                      const Icon(Icons.person_search, color: Colors.blue),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Find Opponents',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      Text(
-                        '$_numberOfPlayers',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        onPressed: () => setState(() => _numberOfPlayers++),
+                      Switch(
+                        value: _findOpponents,
+                        onChanged: (value) {
+                          setState(() {
+                            _findOpponents = value;
+                            if (!value) _opponentsNeeded = 0;
+                          });
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-
-                  // Find Opponents
-                  Text(
-                    AppLocalizations.of(context).findOpponents,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    value: _findOpponents,
-                    onChanged: (value) {
-                      setState(() {
-                        _findOpponents = value;
-                        if (!value) _opponentsNeeded = 0;
-                      });
-                    },
-                    title: Text(AppLocalizations.of(context).lookingForOpponents),
-                    tileColor: Colors.grey[100],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
                   if (_findOpponents) ...[
                     const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 12),
+                    Text(
+                      'How many opponents do you need?',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(AppLocalizations.of(context).opponentsNeeded),
-                        const SizedBox(width: 16),
                         IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
                           onPressed: _opponentsNeeded > 0
                               ? () => setState(() => _opponentsNeeded--)
                               : null,
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: Colors.blue,
                         ),
                         Text(
                           '$_opponentsNeeded',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
                           onPressed: () => setState(() => _opponentsNeeded++),
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _opponentsNeeded > 0
+                                ? 'We will notify you when opponents are found'
+                                : 'Select number of opponents',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ],
-                  const SizedBox(height: 24),
-
-                  // Equipment Rental
-                  Text(
-                    AppLocalizations.of(context).equipmentRental,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  if (!_hasEquipmentFeature)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.orange[700]),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              AppLocalizations.of(context).equipmentNotInPlan,
-                              style: TextStyle(color: Colors.orange[900]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else ...[
-                    SwitchListTile(
-                      value: _equipmentNeeded,
-                      onChanged: (value) {
-                        setState(() {
-                          _equipmentNeeded = value;
-                        });
-                      },
-                      title: Text(AppLocalizations.of(context).needEquipment),
-                      tileColor: Colors.grey[100],
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    if (_equipmentNeeded) ...[
-                      const SizedBox(height: 16),
-                      Card(
-                        color: Colors.blue[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                AppLocalizations.of(context).selectEquipment,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildEquipmentField(
-                                AppLocalizations.of(context).rackets,
-                                'rackets',
-                                Icons.sports_tennis,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildEquipmentField(
-                                AppLocalizations.of(context).balls,
-                                'balls',
-                                Icons.sports_baseball,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                  const SizedBox(height: 24),
-
-                  // Notes
-                  Text(
-                    AppLocalizations.of(context).notes,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context).addNotes,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                    ),
-                    maxLines: 3,
-                    onChanged: (value) => _notes = value.isEmpty ? null : value,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Error Message
-                  if (_error != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.red[700]),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _error!,
-                              style: TextStyle(color: Colors.red[900]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 24),
-
-                  // Create Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _createBooking,
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        AppLocalizations.of(context).createBooking,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildEquipmentField(String label, String key, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: Theme.of(context).primaryColor),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(label, style: const TextStyle(fontSize: 16)),
-        ),
-        SizedBox(
-          width: 80,
-          child: TextField(
-            controller: _equipmentControllers[key],
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              filled: true,
-              fillColor: Colors.white,
+            
+            const SizedBox(height: 24),
+            
+            // Equipment Rental
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+                color: _equipmentNeeded ? Colors.orange[50] : null,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.sports, color: Colors.orange),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Equipment Rental',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _equipmentNeeded,
+                        onChanged: widget.court.getAvailableEquipment().isEmpty
+                            ? null // Disable if no equipment available
+                            : (value) {
+                                setState(() {
+                                  _equipmentNeeded = value;
+                                  if (!value) {
+                                    // Reset all equipment controllers
+                                    for (var controller in _equipmentControllers.values) {
+                                      controller.text = '0';
+                                    }
+                                  }
+                                });
+                              },
+                      ),
+                    ],
+                  ),
+                  if (widget.court.getAvailableEquipment().isEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'No equipment available for this sport',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                  if (_equipmentNeeded && widget.court.getAvailableEquipment().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Specify equipment quantity',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...widget.court.getAvailableEquipment().map((equipment) {
+                      final locale = ref.watch(localeProvider);
+                      final controller = _equipmentControllers[equipment.key]!;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TextField(
+                          controller: controller,
+                          decoration: InputDecoration(
+                            labelText: equipment.getName(locale.languageCode),
+                            prefixIcon: const Icon(Icons.add_shopping_cart),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 16,
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Note: Equipment rental availability depends on your subscription plan',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.orange[900],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
+            
+            const SizedBox(height: 24),
+            
+            // Notes
+            Text(
+              'Additional Notes (Optional)',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _notesController,
+              decoration: InputDecoration(
+                hintText: 'Any special requests or notes...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              maxLines: 3,
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Book Button
+            ElevatedButton(
+              onPressed: _isLoading ? null : _createBooking,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Confirm Booking',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
-

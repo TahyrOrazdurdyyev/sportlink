@@ -40,6 +40,14 @@ interface Category {
     ru?: string
     en?: string
   }
+  available_equipment?: Array<{
+    key: string
+    name_i18n: {
+      tk?: string
+      ru?: string
+      en?: string
+    }
+  }>
   parent_id?: string | null
   children_count: number
   created_at: string
@@ -65,6 +73,33 @@ export default function CategoriesPage() {
     description_ru: '',
     description_en: '',
   })
+  
+  // Equipment state
+  const [equipmentItems, setEquipmentItems] = useState<Array<{
+    key: string
+    name_tk: string
+    name_ru: string
+    name_en: string
+  }>>([])
+  
+  const addEquipmentItem = () => {
+    setEquipmentItems([...equipmentItems, {
+      key: '',
+      name_tk: '',
+      name_ru: '',
+      name_en: ''
+    }])
+  }
+  
+  const removeEquipmentItem = (index: number) => {
+    setEquipmentItems(equipmentItems.filter((_, i) => i !== index))
+  }
+  
+  const updateEquipmentItem = (index: number, field: string, value: string) => {
+    const updated = [...equipmentItems]
+    updated[index] = { ...updated[index], [field]: value }
+    setEquipmentItems(updated)
+  }
 
   const loadCategories = async () => {
     try {
@@ -95,6 +130,17 @@ export default function CategoriesPage() {
         description_ru: category.description_i18n.ru || '',
         description_en: category.description_i18n.en || '',
       })
+      // Load equipment
+      if (category.available_equipment && category.available_equipment.length > 0) {
+        setEquipmentItems(category.available_equipment.map(eq => ({
+          key: eq.key,
+          name_tk: eq.name_i18n.tk || '',
+          name_ru: eq.name_i18n.ru || '',
+          name_en: eq.name_i18n.en || ''
+        })))
+      } else {
+        setEquipmentItems([])
+      }
     } else {
       setEditingCategory(null)
       setFormData({
@@ -105,6 +151,7 @@ export default function CategoriesPage() {
         description_ru: '',
         description_en: '',
       })
+      setEquipmentItems([])
     }
     setDialogOpen(true)
   }
@@ -120,6 +167,7 @@ export default function CategoriesPage() {
       description_ru: '',
       description_en: '',
     })
+    setEquipmentItems([])
   }
 
   const handleSubmit = async () => {
@@ -137,6 +185,16 @@ export default function CategoriesPage() {
           ru: formData.description_ru,
           en: formData.description_en,
         },
+        available_equipment: equipmentItems
+          .filter(item => item.key.trim() !== '')
+          .map(item => ({
+            key: item.key.trim(),
+            name_i18n: {
+              tk: item.name_tk.trim(),
+              ru: item.name_ru.trim(),
+              en: item.name_en.trim()
+            }
+          }))
       }
 
       if (editingCategory) {
@@ -329,6 +387,73 @@ export default function CategoriesPage() {
               multiline
               rows={2}
             />
+            
+            {/* Equipment Section */}
+            <Typography variant="subtitle1" gutterBottom sx={{ mt: 3, mb: 1, fontWeight: 'bold' }}>
+              Available Equipment
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Add equipment items that can be rented for this sport (e.g., balls, rackets, shin guards)
+            </Typography>
+            
+            {equipmentItems.map((item, index) => (
+              <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#f9f9f9' }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                  <Typography variant="subtitle2">Equipment Item #{index + 1}</Typography>
+                  <IconButton size="small" color="error" onClick={() => removeEquipmentItem(index)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+                
+                <TextField
+                  fullWidth
+                  label="Equipment Key (e.g., balls, rackets)"
+                  value={item.key}
+                  onChange={(e) => updateEquipmentItem(index, 'key', e.target.value)}
+                  margin="dense"
+                  size="small"
+                  required
+                  helperText="Use lowercase, e.g.: balls, rackets, shin_guards"
+                />
+                
+                <Box display="flex" gap={1} mt={1}>
+                  <TextField
+                    fullWidth
+                    label="Name (Turkmen)"
+                    value={item.name_tk}
+                    onChange={(e) => updateEquipmentItem(index, 'name_tk', e.target.value)}
+                    margin="dense"
+                    size="small"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Name (Russian)"
+                    value={item.name_ru}
+                    onChange={(e) => updateEquipmentItem(index, 'name_ru', e.target.value)}
+                    margin="dense"
+                    size="small"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Name (English)"
+                    value={item.name_en}
+                    onChange={(e) => updateEquipmentItem(index, 'name_en', e.target.value)}
+                    margin="dense"
+                    size="small"
+                  />
+                </Box>
+              </Box>
+            ))}
+            
+            <Button
+              startIcon={<AddIcon />}
+              onClick={addEquipmentItem}
+              variant="outlined"
+              size="small"
+              sx={{ mt: 1 }}
+            >
+              Add Equipment Item
+            </Button>
           </Box>
         </DialogContent>
         <DialogActions>

@@ -149,6 +149,39 @@ class Tournament(Document):
         
         return participant
     
+    def register_participant(self, user, notes=''):
+        """Register a participant for the tournament"""
+        from apps.subscriptions.permissions import check_user_feature_access
+        
+        # Check subscription feature access
+        has_access, message = check_user_feature_access(user, 'tournament_registration')
+        if not has_access:
+            raise ValueError(message)
+        
+        if not self.can_register():
+            raise ValueError("Registration is not available")
+        
+        # Check if user is already registered
+        for participant in self.participants:
+            if str(participant.user.id) == str(user.id):
+                raise ValueError("User is already registered")
+        
+        # Create new participant
+        participant = TournamentParticipant(
+            user=user,
+            status='accepted',  # Or 'applied' if you need approval
+            registration_date=datetime.utcnow(),
+            notes=notes
+        )
+        
+        if not self.participants:
+            self.participants = []
+        
+        self.participants.append(participant)
+        self.save()
+        
+        return participant
+    
     def close_registration(self):
         """Close tournament registration"""
         self.registration_open = False

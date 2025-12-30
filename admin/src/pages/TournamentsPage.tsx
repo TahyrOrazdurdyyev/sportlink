@@ -699,7 +699,7 @@ export default function TournamentsPage() {
               tournamentToDelete?.name_i18n.ru ||
               tournamentToDelete?.name_i18n.en}
             "?
-          </Typography>
+      </Typography>
           {tournamentToDelete && tournamentToDelete.participant_count > 0 && (
             <Alert severity="warning" sx={{ mt: 2 }}>
               This tournament has {tournamentToDelete.participant_count} participants!

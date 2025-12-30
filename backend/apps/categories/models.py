@@ -16,6 +16,10 @@ class Category(Document):
     name_i18n = fields.DictField(default=dict)  # {"tk": "Tennis", "ru": "Теннис", "en": "Tennis"}
     description_i18n = fields.DictField(default=dict)  # {"tk": "...", "ru": "...", "en": "..."}
     
+    # Available equipment for this sport category
+    # Structure: [{"key": "rackets", "name_i18n": {"en": "Rackets", "ru": "Ракетки", "tk": "Raketler"}}, ...]
+    available_equipment = fields.ListField(fields.DictField(), default=list)
+    
     # Parent category for hierarchy
     parent = fields.ReferenceField('self', reverse_delete_rule=1)  # CASCADE
     

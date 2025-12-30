@@ -6,7 +6,9 @@ import 'package:sportlink/core/services/category_service.dart';
 import 'package:sportlink/core/services/court_service.dart';
 import 'package:sportlink/core/widgets/image_carousel.dart';
 import 'package:sportlink/features/tournaments/presentation/screens/tournaments_list_screen.dart';
+import 'package:sportlink/features/bookings/presentation/screens/create_booking_screen.dart';
 import 'package:sportlink/core/providers/locale_provider.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -86,6 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
     final currentLocale = locale.languageCode;
+    final l10n = AppLocalizations.of(context);
     
     return Scaffold(
       appBar: AppBar(
@@ -174,22 +177,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentBottomNavIndex,
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: l10n.translate('home'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.sports_tennis),
-            label: 'Courts',
+            icon: const Icon(Icons.sports_tennis),
+            label: l10n.translate('courts'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.emoji_events),
-            label: 'Tournaments',
+            icon: const Icon(Icons.emoji_events),
+            label: l10n.translate('tournaments'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: const Icon(Icons.person),
+            label: l10n.translate('profile'),
           ),
         ],
         onTap: (index) {
@@ -216,6 +219,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     final locale = ref.watch(localeProvider);
     final currentLocale = locale.languageCode;
     final courtName = court.nameI18n[currentLocale] ?? court.nameI18n['en'] ?? 'Unknown';
+    final l10n = AppLocalizations.of(context);
     
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -291,11 +295,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Booking coming soon!')),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => CreateBookingScreen(court: court),
+                        ),
                       );
                     },
-                    child: const Text('Book Now'),
+                    child: Text(l10n.translate('book_now')),
                   ),
                 ),
               ],

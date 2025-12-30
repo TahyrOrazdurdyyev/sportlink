@@ -6,6 +6,7 @@ import 'package:sportlink/core/models/category.dart';
 import 'package:sportlink/core/models/favorite_sport.dart';
 import 'package:sportlink/core/services/category_service.dart';
 import 'package:sportlink/core/services/user_service.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -41,11 +42,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String? _currentAvatarUrl;
   
   final List<String> _genderOptions = ['male', 'female', 'other'];
-  final Map<String, String> _genderLabels = {
-    'male': 'Male',
-    'female': 'Female',
-    'other': 'Other',
-  };
 
   @override
   void initState() {
@@ -310,9 +306,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(l10n.translate('edit_profile')),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -382,7 +379,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _firstNameController,
                       decoration: const InputDecoration(
-                        labelText: 'First Name',
+                        labelText: l10n.translate('first_name'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
                       ),
@@ -399,7 +396,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _lastNameController,
                       decoration: const InputDecoration(
-                        labelText: 'Last Name',
+                        labelText: l10n.translate('last_name'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
                       ),
@@ -417,7 +414,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: 'Email',
+                        labelText: l10n.translate('email'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
                       ),
@@ -436,7 +433,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _cityController,
                       decoration: const InputDecoration(
-                        labelText: 'City',
+                        labelText: l10n.translate('city'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.location_city),
                       ),
@@ -448,7 +445,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       controller: _ageController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Age',
+                        labelText: l10n.translate('age'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.cake),
                       ),
@@ -468,14 +465,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     DropdownButtonFormField<String>(
                       value: _selectedGender,
                       decoration: const InputDecoration(
-                        labelText: 'Gender',
+                        labelText: l10n.translate('gender'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.wc),
                       ),
                       items: _genderOptions.map((gender) {
+                        final l10n = AppLocalizations.of(context);
                         return DropdownMenuItem(
                           value: gender,
-                          child: Text(_genderLabels[gender] ?? gender),
+                          child: Text(l10n.translate(gender)),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -656,9 +654,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                       ),
                                     )
-                                  : const Text(
-                                      'Save Changes',
-                                      style: TextStyle(
+                                  : Text(
+                                      l10n.translate('save_changes'),
+                                      style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
                                         height: 1.2,

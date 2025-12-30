@@ -14,7 +14,7 @@ class CategorySerializer(MongoEngineModelSerializer):
     
     class Meta:
         model = Category
-        fields = ['id', 'name_i18n', 'description_i18n', 'parent_id', 'children_count', 'created_at', 'updated_at']
+        fields = ['id', 'name_i18n', 'description_i18n', 'available_equipment', 'parent_id', 'children_count', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def to_representation(self, instance):

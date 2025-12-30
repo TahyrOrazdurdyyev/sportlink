@@ -13,13 +13,24 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'en': {
+      // App
       'app_name': 'Sportlink',
+      
+      // Navigation
+      'home': 'Home',
+      'courts': 'Courts',
+      'tournaments': 'Tournaments',
+      'profile': 'Profile',
+      
+      // Auth
       'login': 'Login',
       'sign_up': 'Sign Up',
+      'logout': 'Logout',
       'first_name': 'First Name',
       'last_name': 'Last Name',
       'nickname': 'Nickname',
       'phone': 'Phone Number',
+      'email': 'Email',
       'password': 'Password',
       'confirm_password': 'Confirm Password',
       'login_placeholder': 'Phone or Nickname',
@@ -27,10 +38,21 @@ class AppLocalizations {
       'phone_helper': 'Format: +99365532570',
       'password_requirements': 'Min 8 characters, letters, numbers, symbols',
       'passwords_dont_match': 'Passwords do not match',
-      'weak_password': 'Password must contain at least 8 characters, including letters, numbers and symbols',
+      'weak_password': 'Password must contain at least 8 characters',
       'login_button': 'Login',
       'signup_button': 'Sign Up',
       'all_fields_required': 'All fields are required',
+      
+      // Profile
+      'edit_profile': 'Edit Profile',
+      'view_profile': 'View Profile',
+      'my_bookings': 'My Bookings',
+      'booking_history': 'Booking History',
+      'my_subscriptions': 'My Subscriptions',
+      'subscription_plans': 'Subscription Plans',
+      'statistics': 'Statistics',
+      'find_opponents_menu': 'Find Opponents',
+      'settings': 'Settings',
       
       // Settings
       'settings_title': 'Settings',
@@ -52,44 +74,184 @@ class AppLocalizations {
       'coming_soon': 'Coming soon!',
       
       // Booking
+      'book_now': 'Book Now',
+      'book_court': 'Book Court',
       'create_booking': 'Create Booking',
+      'confirm_booking': 'Confirm Booking',
+      'cancel_booking': 'Cancel Booking',
       'date_and_time': 'Date & Time',
       'select_date': 'Select Date',
       'select_start_time': 'Select Start Time',
       'select_end_time': 'Select End Time',
       'start_time': 'Start Time',
       'end_time': 'End Time',
+      'check_availability': 'Check Availability',
+      'checking': 'Checking...',
+      'time_slot_available': 'This time slot is available!',
+      'time_slot_not_available': 'This time slot is not available',
+      'selected_time_not_available': 'Selected time slot is not available',
+      
+      // Players & Opponents
       'number_of_players': 'Number of Players',
       'find_opponents': 'Find Opponents',
       'looking_for_opponents': 'Looking for opponents',
       'opponents_needed': 'Opponents Needed',
+      'how_many_people_in_group': 'How many people in your group?',
+      'how_many_opponents_needed': 'How many opponents do you need?',
+      'select_number_of_opponents': 'Select number of opponents',
+      'notify_when_opponents_found': 'We will notify you when opponents are found',
+      
+      // Equipment
       'equipment_rental': 'Equipment Rental',
       'need_equipment': 'I need equipment',
       'equipment_not_in_plan': 'Equipment rental is not included in your subscription plan',
       'select_equipment': 'Select Equipment',
+      'specify_equipment_quantity': 'Specify equipment quantity',
+      'no_equipment_available': 'No equipment available for this sport',
+      'equipment_depends_on_plan': 'Note: Equipment rental availability depends on your subscription plan',
       'rackets': 'Rackets',
       'balls': 'Balls',
+      
+      // Notes
       'notes': 'Notes',
-      'add_notes': 'Add notes (optional)',
-      'please_select_date_time': 'Please select date and time',
-      'end_time_must_be_after_start': 'End time must be after start time',
-      'please_specify_opponents_needed': 'Please specify number of opponents needed',
-      'please_specify_equipment': 'Please specify equipment quantity',
-      'booking_created_successfully': 'Booking created successfully!',
+      'additional_notes': 'Additional Notes (Optional)',
+      'add_notes': 'Any special requests or notes...',
+      
+      // Days of Week
+      'monday': 'Monday',
+      'tuesday': 'Tuesday',
+      'wednesday': 'Wednesday',
+      'thursday': 'Thursday',
+      'friday': 'Friday',
+      'saturday': 'Saturday',
+      'sunday': 'Sunday',
+      'mon': 'Mon',
+      'tue': 'Tue',
+      'wed': 'Wed',
+      'thu': 'Thu',
+      'fri': 'Fri',
+      'sat': 'Sat',
+      'sun': 'Sun',
+      
+      // Subscriptions
+      'subscription': 'Subscription',
+      'subscription_plans': 'Subscription Plans',
+      'active_subscription': 'Active Subscription',
+      'no_active_subscription': 'No Active Subscription',
+      'plan_name': 'Plan Name',
+      'expires': 'Expires',
+      'days_remaining': 'days remaining',
+      'status': 'Status',
+      'features': 'Features',
       'booking_restrictions': 'Booking Restrictions',
       'bookings_per_week': 'bookings per week',
       'max_duration': 'Max duration',
       'hours': 'hours',
       'allowed_days': 'Allowed days',
+      'weekdays': 'Weekdays',
+      'weekends': 'Weekends',
+      'all_days': 'All days',
+      'monthly': 'Monthly',
+      'yearly': 'Yearly',
+      'month': 'month',
+      'year': 'year',
+      'subscribe': 'Subscribe',
+      'payment_subscription': 'Subscription Payment',
+      'payment_instructions': 'To subscribe, you need to:',
+      'visit_office': 'Visit our office at',
+      'bring_phone': 'Bring your phone with this app installed',
+      'make_payment': 'Make the payment',
+      'office_address': 'Ashgabat, Turkmenistan',
+      'working_hours': 'Working hours',
+      'contact_phone': 'Contact phone',
+      'got_it': 'Got it',
+      'per_week': 'per week',
+      'per_session': 'per session',
+      'days': 'days',
+      
+      // Booking History
+      'upcoming': 'Upcoming',
+      'past': 'Past',
+      'cancelled': 'Cancelled',
+      'no_bookings': 'No bookings yet',
+      'start_booking': 'Start by booking a court!',
+      
+      // Messages
+      'please_select_date_time': 'Please select date and time',
+      'end_time_must_be_after_start': 'End time must be after start time',
+      'please_specify_opponents_needed': 'Please specify number of opponents needed',
+      'please_specify_equipment': 'Please specify equipment quantity',
+      'booking_created_successfully': 'Booking created successfully!',
+      'booking_cancelled_successfully': 'Booking cancelled successfully!',
+      'error': 'Error',
+      'success': 'Success',
+      'confirm': 'Confirm',
+      'cancel': 'Cancel',
+      'ok': 'OK',
+      'yes': 'Yes',
+      'no': 'No',
+      'save': 'Save',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      
+      // Common
+      'loading': 'Loading...',
+      'refresh': 'Refresh',
+      'search': 'Search',
+      'filter': 'Filter',
+      'sort': 'Sort',
+      'apply': 'Apply',
+      'reset': 'Reset',
+      'clear': 'Clear',
+      'submit': 'Submit',
+      'continue_text': 'Continue',
+      'back': 'Back',
+      'next': 'Next',
+      'done': 'Done',
+      'close': 'Close',
+      'view_details': 'View Details',
+      'details': 'Details',
+      
+      // Edit Profile
+      'gender': 'Gender',
+      'male': 'Male',
+      'female': 'Female',
+      'other': 'Other',
+      'age': 'Age',
+      'city': 'City',
+      'favorite_sports': 'Favorite Sports',
+      'select_sports': 'Select Sports',
+      'experience_level': 'Experience Level',
+      'change_avatar': 'Change Avatar',
+      'take_photo': 'Take Photo',
+      'choose_from_gallery': 'Choose from Gallery',
+      'uploading': 'Uploading...',
+      'save_changes': 'Save Changes',
+      'saving': 'Saving...',
+      'profile_updated': 'Profile updated successfully',
+      'select_gender': 'Select Gender',
+      'enter_age': 'Enter Age',
+      'enter_city': 'Enter City',
     },
     'ru': {
+      // App
       'app_name': 'Sportlink',
+      
+      // Navigation
+      'home': 'Главная',
+      'courts': 'Корты',
+      'tournaments': 'Турниры',
+      'profile': 'Профиль',
+      
+      // Auth
       'login': 'Вход',
       'sign_up': 'Регистрация',
+      'logout': 'Выход',
       'first_name': 'Имя',
       'last_name': 'Фамилия',
       'nickname': 'Никнейм',
       'phone': 'Номер телефона',
+      'email': 'Email',
       'password': 'Пароль',
       'confirm_password': 'Повторите пароль',
       'login_placeholder': 'Телефон или никнейм',
@@ -97,10 +259,21 @@ class AppLocalizations {
       'phone_helper': 'Формат: +99365532570',
       'password_requirements': 'Мин. 8 символов, буквы, цифры, символы',
       'passwords_dont_match': 'Пароли не совпадают',
-      'weak_password': 'Пароль должен содержать минимум 8 символов, включая буквы, цифры и символы',
+      'weak_password': 'Пароль должен содержать минимум 8 символов',
       'login_button': 'Войти',
       'signup_button': 'Зарегистрироваться',
       'all_fields_required': 'Все поля обязательны',
+      
+      // Profile
+      'edit_profile': 'Редактировать профиль',
+      'view_profile': 'Просмотр профиля',
+      'my_bookings': 'Мои бронирования',
+      'booking_history': 'История бронирований',
+      'my_subscriptions': 'Мои подписки',
+      'subscription_plans': 'Тарифные планы',
+      'statistics': 'Статистика',
+      'find_opponents_menu': 'Найти соперников',
+      'settings': 'Настройки',
       
       // Settings
       'settings_title': 'Настройки',
@@ -122,44 +295,184 @@ class AppLocalizations {
       'coming_soon': 'Скоро будет!',
       
       // Booking
+      'book_now': 'Забронировать',
+      'book_court': 'Забронировать корт',
       'create_booking': 'Создать бронирование',
+      'confirm_booking': 'Подтвердить бронирование',
+      'cancel_booking': 'Отменить бронирование',
       'date_and_time': 'Дата и время',
       'select_date': 'Выберите дату',
       'select_start_time': 'Выберите время начала',
       'select_end_time': 'Выберите время окончания',
       'start_time': 'Время начала',
       'end_time': 'Время окончания',
+      'check_availability': 'Проверить доступность',
+      'checking': 'Проверка...',
+      'time_slot_available': 'Это время доступно!',
+      'time_slot_not_available': 'Это время недоступно',
+      'selected_time_not_available': 'Выбранное время недоступно',
+      
+      // Players & Opponents
       'number_of_players': 'Количество игроков',
       'find_opponents': 'Найти соперников',
       'looking_for_opponents': 'Ищу соперников',
       'opponents_needed': 'Нужно соперников',
+      'how_many_people_in_group': 'Сколько человек в вашей группе?',
+      'how_many_opponents_needed': 'Сколько соперников вам нужно?',
+      'select_number_of_opponents': 'Выберите количество соперников',
+      'notify_when_opponents_found': 'Мы уведомим вас, когда найдем соперников',
+      
+      // Equipment
       'equipment_rental': 'Аренда экипировки',
       'need_equipment': 'Нужна экипировка',
       'equipment_not_in_plan': 'Аренда экипировки не включена в ваш тарифный план',
       'select_equipment': 'Выберите экипировку',
+      'specify_equipment_quantity': 'Укажите количество экипировки',
+      'no_equipment_available': 'Нет доступной экипировки для этого вида спорта',
+      'equipment_depends_on_plan': 'Примечание: Наличие экипировки зависит от вашего тарифного плана',
       'rackets': 'Ракетки',
       'balls': 'Мячи',
+      
+      // Notes
       'notes': 'Заметки',
-      'add_notes': 'Добавить заметки (необязательно)',
-      'please_select_date_time': 'Пожалуйста, выберите дату и время',
-      'end_time_must_be_after_start': 'Время окончания должно быть после времени начала',
-      'please_specify_opponents_needed': 'Пожалуйста, укажите количество нужных соперников',
-      'please_specify_equipment': 'Пожалуйста, укажите количество экипировки',
-      'booking_created_successfully': 'Бронирование успешно создано!',
+      'additional_notes': 'Дополнительные заметки (необязательно)',
+      'add_notes': 'Особые пожелания или заметки...',
+      
+      // Days of Week
+      'monday': 'Понедельник',
+      'tuesday': 'Вторник',
+      'wednesday': 'Среда',
+      'thursday': 'Четверг',
+      'friday': 'Пятница',
+      'saturday': 'Суббота',
+      'sunday': 'Воскресенье',
+      'mon': 'Пн',
+      'tue': 'Вт',
+      'wed': 'Ср',
+      'thu': 'Чт',
+      'fri': 'Пт',
+      'sat': 'Сб',
+      'sun': 'Вс',
+      
+      // Subscriptions
+      'subscription': 'Подписка',
+      'subscription_plans': 'Тарифные планы',
+      'active_subscription': 'Активная подписка',
+      'no_active_subscription': 'Нет активной подписки',
+      'plan_name': 'Название плана',
+      'expires': 'Истекает',
+      'days_remaining': 'дней осталось',
+      'status': 'Статус',
+      'features': 'Возможности',
       'booking_restrictions': 'Ограничения бронирования',
       'bookings_per_week': 'бронирований в неделю',
       'max_duration': 'Макс. длительность',
       'hours': 'часов',
       'allowed_days': 'Разрешенные дни',
+      'weekdays': 'Будние дни',
+      'weekends': 'Выходные',
+      'all_days': 'Все дни',
+      'monthly': 'Ежемесячно',
+      'yearly': 'Ежегодно',
+      'month': 'месяц',
+      'year': 'год',
+      'subscribe': 'Подписаться',
+      'payment_subscription': 'Оплата подписки',
+      'payment_instructions': 'Для оформления подписки необходимо:',
+      'visit_office': 'Посетить наш офис по адресу',
+      'bring_phone': 'Принести телефон с установленным приложением',
+      'make_payment': 'Произвести оплату',
+      'office_address': 'Ашхабад, Туркменистан',
+      'working_hours': 'Часы работы',
+      'contact_phone': 'Контактный телефон',
+      'got_it': 'Понятно',
+      'per_week': 'в неделю',
+      'per_session': 'за сеанс',
+      'days': 'дни',
+      
+      // Booking History
+      'upcoming': 'Предстоящие',
+      'past': 'Прошедшие',
+      'cancelled': 'Отмененные',
+      'no_bookings': 'Нет бронирований',
+      'start_booking': 'Начните с бронирования корта!',
+      
+      // Messages
+      'please_select_date_time': 'Пожалуйста, выберите дату и время',
+      'end_time_must_be_after_start': 'Время окончания должно быть после времени начала',
+      'please_specify_opponents_needed': 'Пожалуйста, укажите количество нужных соперников',
+      'please_specify_equipment': 'Пожалуйста, укажите количество экипировки',
+      'booking_created_successfully': 'Бронирование успешно создано!',
+      'booking_cancelled_successfully': 'Бронирование успешно отменено!',
+      'error': 'Ошибка',
+      'success': 'Успех',
+      'confirm': 'Подтвердить',
+      'cancel': 'Отмена',
+      'ok': 'ОК',
+      'yes': 'Да',
+      'no': 'Нет',
+      'save': 'Сохранить',
+      'delete': 'Удалить',
+      'edit': 'Редактировать',
+      
+      // Common
+      'loading': 'Загрузка...',
+      'refresh': 'Обновить',
+      'search': 'Поиск',
+      'filter': 'Фильтр',
+      'sort': 'Сортировка',
+      'apply': 'Применить',
+      'reset': 'Сбросить',
+      'clear': 'Очистить',
+      'submit': 'Отправить',
+      'continue_text': 'Продолжить',
+      'back': 'Назад',
+      'next': 'Далее',
+      'done': 'Готово',
+      'close': 'Закрыть',
+      'view_details': 'Подробнее',
+      'details': 'Детали',
+      
+      // Edit Profile
+      'gender': 'Пол',
+      'male': 'Мужской',
+      'female': 'Женский',
+      'other': 'Другой',
+      'age': 'Возраст',
+      'city': 'Город',
+      'favorite_sports': 'Любимые виды спорта',
+      'select_sports': 'Выберите виды спорта',
+      'experience_level': 'Уровень опыта',
+      'change_avatar': 'Изменить аватар',
+      'take_photo': 'Сделать фото',
+      'choose_from_gallery': 'Выбрать из галереи',
+      'uploading': 'Загрузка...',
+      'save_changes': 'Сохранить изменения',
+      'saving': 'Сохранение...',
+      'profile_updated': 'Профиль успешно обновлен',
+      'select_gender': 'Выберите пол',
+      'enter_age': 'Введите возраст',
+      'enter_city': 'Введите город',
     },
     'tk': {
+      // App
       'app_name': 'Sportlink',
+      
+      // Navigation
+      'home': 'Baş sahypa',
+      'courts': 'Meýdançalar',
+      'tournaments': 'Ýaryşlar',
+      'profile': 'Profil',
+      
+      // Auth
       'login': 'Giriş',
       'sign_up': 'Hasaba al',
+      'logout': 'Çyk',
       'first_name': 'Ady',
       'last_name': 'Familiýasy',
       'nickname': 'Lakamy',
       'phone': 'Telefon nomeri',
+      'email': 'Email',
       'password': 'Parol',
       'confirm_password': 'Paroly gaýtalaň',
       'login_placeholder': 'Telefon ýa-da lakam',
@@ -167,10 +480,21 @@ class AppLocalizations {
       'phone_helper': 'Format: +99365532570',
       'password_requirements': 'Min 8 nyşan, harplar, sanlar, simwollar',
       'passwords_dont_match': 'Parollar gabat gelmeýär',
-      'weak_password': 'Parol azyndan 8 nyşany öz içine almalydyr, şol sanda harplar, sanlar we simwollar',
+      'weak_password': 'Parol azyndan 8 nyşany öz içine almalydyr',
       'login_button': 'Gir',
       'signup_button': 'Hasaba al',
       'all_fields_required': 'Ähli meýdançalar hökmany',
+      
+      // Profile
+      'edit_profile': 'Profili üýtget',
+      'view_profile': 'Profile göz aýla',
+      'my_bookings': 'Meniň bronlaşlarym',
+      'booking_history': 'Bronlaş taryhy',
+      'my_subscriptions': 'Meniň ýazylmalarym',
+      'subscription_plans': 'Tarif meýilnamalary',
+      'statistics': 'Statistika',
+      'find_opponents_menu': 'Garşydaş tap',
+      'settings': 'Sazlamalar',
       
       // Settings
       'settings_title': 'Sazlamalar',
@@ -192,35 +516,163 @@ class AppLocalizations {
       'coming_soon': 'Geljekde!',
       
       // Booking
+      'book_now': 'Bronlaş',
+      'book_court': 'Meýdançany bronlaş',
       'create_booking': 'Bronlaş döret',
+      'confirm_booking': 'Bronlaşy tassykla',
+      'cancel_booking': 'Bronlaşy ýatyr',
       'date_and_time': 'Sene we wagt',
       'select_date': 'Senäni saýlaň',
       'select_start_time': 'Başlangyç wagtyny saýlaň',
       'select_end_time': 'Gutaryş wagtyny saýlaň',
       'start_time': 'Başlangyç wagty',
       'end_time': 'Gutaryş wagty',
+      'check_availability': 'Elýeterliligini barlañ',
+      'checking': 'Barlanýar...',
+      'time_slot_available': 'Bu wagt elýeterlidir!',
+      'time_slot_not_available': 'Bu wagt elýeterli däl',
+      
+      // Players & Opponents
       'number_of_players': 'Oýunçylaryň sany',
       'find_opponents': 'Garşydaşlary tap',
       'looking_for_opponents': 'Garşydaş gözleýärin',
       'opponents_needed': 'Garşydaş gerek',
+      'how_many_people_in_group': 'Toparyňyzda näçe adam bar?',
+      'how_many_opponents_needed': 'Näçe garşydaş gerek?',
+      'select_number_of_opponents': 'Garşydaşlaryň sanyny saýlañ',
+      'notify_when_opponents_found': 'Garşydaş tapanymyzda size habar bereris',
+      
+      // Equipment
       'equipment_rental': 'Enjam kärendesi',
       'need_equipment': 'Enjam gerek',
       'equipment_not_in_plan': 'Enjam kärendesi siziň tarif meýilnamaňyza girmeýär',
       'select_equipment': 'Enjamy saýlaň',
+      'specify_equipment_quantity': 'Enjamyň mukdaryny görkeziň',
+      'no_equipment_available': 'Bu sport üçin enjam ýok',
+      'equipment_depends_on_plan': 'Bellik: Enjam kärendesi tarif meýilnamaňyza baglydyr',
       'rackets': 'Raketler',
       'balls': 'Toplar',
+      
+      // Notes
       'notes': 'Bellikler',
-      'add_notes': 'Bellik goş (hökmany däl)',
-      'please_select_date_time': 'Senäni we wagty saýlaň',
-      'end_time_must_be_after_start': 'Gutaryş wagty başlangyç wagtyndan soň bolmaly',
-      'please_specify_opponents_needed': 'Gerekli garşydaşlaryň sanyny görkeziň',
-      'please_specify_equipment': 'Enjamyň mukdaryny görkeziň',
-      'booking_created_successfully': 'Bronlaş üstünlikli döredildi!',
+      'additional_notes': 'Goşmaça bellikler (hökmany däl)',
+      'add_notes': 'Ýörite haýyşlar ýa-da bellikler...',
+      
+      // Days of Week
+      'monday': 'Duşenbe',
+      'tuesday': 'Sişenbe',
+      'wednesday': 'Çarşenbe',
+      'thursday': 'Penşenbe',
+      'friday': 'Anna',
+      'saturday': 'Şenbe',
+      'sunday': 'Ýekşenbe',
+      'mon': 'Du',
+      'tue': 'Si',
+      'wed': 'Ça',
+      'thu': 'Pe',
+      'fri': 'An',
+      'sat': 'Şe',
+      'sun': 'Ýe',
+      
+      // Subscriptions
+      'subscription': 'Ýazylma',
+      'subscription_plans': 'Tarif meýilnamalary',
+      'active_subscription': 'Işjeň ýazylma',
+      'no_active_subscription': 'Işjeň ýazylma ýok',
+      'plan_name': 'Meýilnama ady',
+      'expires': 'Gutarýar',
+      'days_remaining': 'gün galdy',
+      'status': 'Status',
+      'features': 'Aýratynlyklar',
       'booking_restrictions': 'Bronlaş çäklendirmeleri',
       'bookings_per_week': 'hepdede bronlaş',
       'max_duration': 'Maks. dowamlylygy',
       'hours': 'sagat',
       'allowed_days': 'Rugsat berlen günler',
+      'weekdays': 'Iş günleri',
+      'weekends': 'Dynç günleri',
+      'all_days': 'Ähli günler',
+      'monthly': 'Aýlyk',
+      'yearly': 'Ýyllyk',
+      'month': 'aý',
+      'year': 'ýyl',
+      'subscribe': 'Ýazyl',
+      'payment_subscription': 'Ýazylma töleg',
+      'payment_instructions': 'Ýazylmak üçin gerek:',
+      'visit_office': 'Ofisimize baryň',
+      'bring_phone': 'Telefonyňyzy programmasy bilen getiriň',
+      'make_payment': 'Töleg ediň',
+      'office_address': 'Aşgabat, Türkmenistan',
+      'working_hours': 'Iş wagty',
+      'contact_phone': 'Aragatnaşyk telefony',
+      'got_it': 'Düşündim',
+      'per_week': 'hepdede',
+      'per_session': 'sessiýa üçin',
+      'days': 'günler',
+      
+      // Booking History
+      'upcoming': 'Geljekki',
+      'past': 'Geçen',
+      'cancelled': 'Ýatyr edilen',
+      'no_bookings': 'Bronlaş ýok',
+      'start_booking': 'Meýdançany bronlamakdan başlañ!',
+      
+      // Messages
+      'please_select_date_time': 'Senäni we wagty saýlaň',
+      'end_time_must_be_after_start': 'Gutaryş wagty başlangyç wagtyndan soň bolmaly',
+      'please_specify_opponents_needed': 'Gerekli garşydaşlaryň sanyny görkeziň',
+      'please_specify_equipment': 'Enjamyň mukdaryny görkeziň',
+      'booking_created_successfully': 'Bronlaş üstünlikli döredildi!',
+      'booking_cancelled_successfully': 'Bronlaş üstünlikli ýatyryldy!',
+      'error': 'Ýalñyşlyk',
+      'success': 'Üstünlik',
+      'confirm': 'Tassykla',
+      'cancel': 'Ýatyr',
+      'ok': 'Bolýar',
+      'yes': 'Hawa',
+      'no': 'Ýok',
+      'save': 'Ýatda sakla',
+      'delete': 'Poz',
+      'edit': 'Üýtget',
+      
+      // Common
+      'loading': 'Ýüklene...',
+      'refresh': 'Täzele',
+      'search': 'Gözle',
+      'filter': 'Süzgüç',
+      'sort': 'Tertiple',
+      'apply': 'Ulanyş',
+      'reset': 'Täzeden dur',
+      'clear': 'Arassala',
+      'submit': 'Ugrat',
+      'continue_text': 'Dowam et',
+      'back': 'Yza',
+      'next': 'Indiki',
+      'done': 'Taýýar',
+      'close': 'Ýap',
+      'view_details': 'Jikme-jikliklere syn et',
+      'details': 'Jikme-jiklikler',
+      
+      // Edit Profile
+      'gender': 'Jyns',
+      'male': 'Erkek',
+      'female': 'Aýal',
+      'other': 'Başga',
+      'age': 'Ýaş',
+      'city': 'Şäher',
+      'favorite_sports': 'Halaýan sport görnüşleri',
+      'select_sports': 'Sport görnüşlerini saýlañ',
+      'experience_level': 'Tejribe derejesi',
+      'change_avatar': 'Suraty üýtget',
+      'take_photo': 'Surat çek',
+      'choose_from_gallery': 'Galereýadan saýla',
+      'uploading': 'Ýüklene...',
+      'save_changes': 'Üýtgetmeleri ýatda sakla',
+      'saving': 'Ýatda saklanýar...',
+      'profile_updated': 'Profil üstünlikli täzelendi',
+      'select_gender': 'Jynsy saýlañ',
+      'enter_age': 'Ýaşy giriziň',
+      'enter_city': 'Şäheri giriziň',
     },
   };
 
@@ -228,13 +680,24 @@ class AppLocalizations {
     return _localizedValues[locale.languageCode]?[key] ?? key;
   }
 
+  // Quick access getters for commonly used strings
   String get appName => translate('app_name');
+  
+  // Navigation
+  String get home => translate('home');
+  String get courts => translate('courts');
+  String get tournaments => translate('tournaments');
+  String get profile => translate('profile');
+  
+  // Auth
   String get login => translate('login');
   String get signUp => translate('sign_up');
+  String get logout => translate('logout');
   String get firstName => translate('first_name');
   String get lastName => translate('last_name');
   String get nickname => translate('nickname');
   String get phone => translate('phone');
+  String get email => translate('email');
   String get password => translate('password');
   String get confirmPassword => translate('confirm_password');
   String get loginPlaceholder => translate('login_placeholder');
@@ -247,7 +710,15 @@ class AppLocalizations {
   String get signupButton => translate('signup_button');
   String get allFieldsRequired => translate('all_fields_required');
   
+  // Profile
+  String get bookNow => translate('book_now');
+  String get bookCourt => translate('book_court');
+  String get editProfile => translate('edit_profile');
+  String get myBookings => translate('my_bookings');
+  String get bookingHistory => translate('booking_history');
+  
   // Settings
+  String get settings => translate('settings');
   String get settingsTitle => translate('settings_title');
   String get notificationsSection => translate('notifications_section');
   String get pushNotifications => translate('push_notifications');
@@ -264,38 +735,6 @@ class AppLocalizations {
   String get termsOfService => translate('terms_of_service');
   String get aboutSection => translate('about_section');
   String get appVersion => translate('app_version');
-  String get comingSoon => translate('coming_soon');
-  
-  // Booking
-  String get createBooking => translate('create_booking');
-  String get dateAndTime => translate('date_and_time');
-  String get selectDate => translate('select_date');
-  String get selectStartTime => translate('select_start_time');
-  String get selectEndTime => translate('select_end_time');
-  String get startTime => translate('start_time');
-  String get endTime => translate('end_time');
-  String get numberOfPlayers => translate('number_of_players');
-  String get findOpponents => translate('find_opponents');
-  String get lookingForOpponents => translate('looking_for_opponents');
-  String get opponentsNeeded => translate('opponents_needed');
-  String get equipmentRental => translate('equipment_rental');
-  String get needEquipment => translate('need_equipment');
-  String get equipmentNotInPlan => translate('equipment_not_in_plan');
-  String get selectEquipment => translate('select_equipment');
-  String get rackets => translate('rackets');
-  String get balls => translate('balls');
-  String get notes => translate('notes');
-  String get addNotes => translate('add_notes');
-  String get pleaseSelectDateTime => translate('please_select_date_time');
-  String get endTimeMustBeAfterStart => translate('end_time_must_be_after_start');
-  String get pleaseSpecifyOpponentsNeeded => translate('please_specify_opponents_needed');
-  String get pleaseSpecifyEquipment => translate('please_specify_equipment');
-  String get bookingCreatedSuccessfully => translate('booking_created_successfully');
-  String get bookingRestrictions => translate('booking_restrictions');
-  String get bookingsPerWeek => translate('bookings_per_week');
-  String get maxDuration => translate('max_duration');
-  String get hours => translate('hours');
-  String get allowedDays => translate('allowed_days');
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
