@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppConfig {
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.31.106:8000/api/v1',
+    defaultValue: 'http://192.168.1.97:8000/api/v1',
   );
   
   static SharedPreferences? _prefs;

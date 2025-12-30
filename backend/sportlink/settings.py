@@ -148,7 +148,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Base URL for generating absolute URLs (used when request context is not available)
-BASE_URL = os.getenv('BASE_URL', 'http://192.168.31.106:8000')
+BASE_URL = os.getenv('BASE_URL', 'http://192.168.1.97:8000')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
