@@ -14,7 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,192.168.31.106').split(',')
+# Разрешаем все локальные IP + ваш домен для продакшена
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')  # Для разработки разрешаем все
 
 
 # Application definition
@@ -148,6 +149,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Base URL for generating absolute URLs (used when request context is not available)
+# Для продакшена: установите переменную окружения BASE_URL=https://api.sportlink.tm
 BASE_URL = os.getenv('BASE_URL', 'http://192.168.1.97:8000')
 
 # Default primary key field type
