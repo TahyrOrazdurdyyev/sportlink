@@ -39,8 +39,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
     });
     
     try {
+      // Check if user is authenticated first
       final authRepo = ref.read(authRepositoryProvider);
+      final isAuth = await authRepo.isAuthenticated();
+      
+      print('DEBUG Profile: isAuthenticated = $isAuth');
+      
+      if (!isAuth) {
+        // User is not authenticated, show login screen
+        if (mounted) {
+          setState(() {
+            _currentUser = null;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+      
+      // User is authenticated, try to load profile
       final user = await authRepo.getCurrentUser();
+      print('DEBUG Profile: user = $user');
+      
+      if (user == null && isAuth) {
+        // User is authenticated but getCurrentUser returned null
+        // This means 401 error - token might be invalid
+        // Wait a bit and try one more time
+        await Future.delayed(const Duration(milliseconds: 500));
+        final userRetry = await authRepo.getCurrentUser();
+        print('DEBUG Profile: userRetry = $userRetry');
+        
+        if (mounted) {
+          setState(() {
+            _currentUser = userRetry;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
       
       if (mounted) {
         setState(() {

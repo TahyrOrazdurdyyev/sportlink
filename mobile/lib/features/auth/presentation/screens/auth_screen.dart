@@ -68,8 +68,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       );
 
       if (success && mounted) {
-        // Navigate to home screen
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Wait a bit to ensure tokens are fully saved to SharedPreferences
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          // Navigate to home screen
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       }
     } catch (e) {
       setState(() {
@@ -136,8 +140,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       );
 
       if (success && mounted) {
-        // Navigate to home screen after successful registration
-        Navigator.of(context).pushReplacementNamed('/home');
+        // Wait a bit to ensure tokens are fully saved to SharedPreferences
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          // Navigate to home screen after successful registration
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       }
     } catch (e) {
       setState(() {
