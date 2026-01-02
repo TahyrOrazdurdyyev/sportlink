@@ -107,11 +107,18 @@ class AuthRepository {
       print('DEBUG getCurrentUser: userData from cache: $userData');
       
       if (userData != null) {
-        final userJson = jsonDecode(userData) as Map<String, dynamic>;
-        print('DEBUG getCurrentUser: Parsed user JSON: $userJson');
-        final user = UserModel.fromJson(userJson);
-        print('DEBUG getCurrentUser: Created UserModel: ${user.firstName} ${user.lastName}');
-        return user;
+        try {
+          final userJson = jsonDecode(userData) as Map<String, dynamic>;
+          print('DEBUG getCurrentUser: Parsed user JSON: $userJson');
+          final user = UserModel.fromJson(userJson);
+          print('DEBUG getCurrentUser: Created UserModel: ${user.firstName} ${user.lastName}');
+          return user;
+        } catch (parseError) {
+          print('DEBUG getCurrentUser: Parse error, clearing cache: $parseError');
+          // Clear corrupted cache
+          await prefs.remove('user_data');
+          // Try to fetch from API
+        }
       }
       
       print('DEBUG getCurrentUser: No cached data, fetching from API');
