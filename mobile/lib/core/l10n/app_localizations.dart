@@ -135,6 +135,13 @@ class AppLocalizations {
       'time_slot_available': 'This time slot is available!',
       'time_slot_not_available': 'This time slot is not available',
       'selected_time_not_available': 'Selected time slot is not available',
+      'select_time': 'Select Time',
+      'opponents_found': 'Found {count} opponent(s)!',
+      'no_opponents_found_yet': 'No opponents found yet. You will be notified when someone matches.',
+      'weekly_limit_reached': 'Weekly booking limit reached. Please try again next week.',
+      'duration_exceeds_limit': 'Booking duration exceeds your plan limit.',
+      'day_not_allowed': 'Your plan does not allow bookings on this day.',
+      'equipment_rental_not_included': 'Your plan does not include equipment rental.',
       
       // Players & Opponents
       'number_of_players': 'Number of Players',
@@ -434,6 +441,13 @@ class AppLocalizations {
       'time_slot_available': 'Это время доступно!',
       'time_slot_not_available': 'Это время недоступно',
       'selected_time_not_available': 'Выбранное время недоступно',
+      'select_time': 'Выберите время',
+      'opponents_found': 'Найдено {count} соперник(а)!',
+      'no_opponents_found_yet': 'Соперники пока не найдены. Вы получите уведомление, когда кто-то подойдет.',
+      'weekly_limit_reached': 'Достигнут недельный лимит бронирований. Попробуйте снова на следующей неделе.',
+      'duration_exceeds_limit': 'Длительность бронирования превышает лимит вашего плана.',
+      'day_not_allowed': 'Ваш план не позволяет бронировать в этот день.',
+      'equipment_rental_not_included': 'Ваш план не включает аренду экипировки.',
       
       // Players & Opponents
       'number_of_players': 'Количество игроков',
@@ -732,6 +746,14 @@ class AppLocalizations {
       'checking': 'Barlanýar...',
       'time_slot_available': 'Bu wagt elýeterlidir!',
       'time_slot_not_available': 'Bu wagt elýeterli däl',
+      'selected_time_not_available': 'Saýlanan wagt elýeterli däl',
+      'select_time': 'Wagty saýlaň',
+      'opponents_found': '{count} garşydaş tapyldy!',
+      'no_opponents_found_yet': 'Garşydaşlar entek tapylmady. Biri gabat gelende size habar berler.',
+      'weekly_limit_reached': 'Hepdelik bronlaş çägi ýetildi. Indiki hepde täzeden synanşyň.',
+      'duration_exceeds_limit': 'Bronlaş dowamlylygy meýilnama çägiňizden geçýär.',
+      'day_not_allowed': 'Meýilnamaňyz bu günde bronlaşmaga rugsat bermeýär.',
+      'equipment_rental_not_included': 'Meýilnamaňyz enjam kärendesini öz içine almaz.',
       
       // Players & Opponents
       'number_of_players': 'Oýunçylaryň sany',

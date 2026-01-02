@@ -65,8 +65,9 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
     final endDateTime = _combineDateAndTime(_selectedDate, _endTime);
 
     if (endDateTime.isBefore(startDateTime) || endDateTime.isAtSameMomentAs(startDateTime)) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('End time must be after start time')),
+        SnackBar(content: Text(l10n.translate('end_time_must_be_after_start'))),
       );
       return;
     }
@@ -94,8 +95,9 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
         setState(() {
           _checkingAvailability = false;
         });
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error checking availability: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     }
@@ -106,23 +108,26 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
     final endDateTime = _combineDateAndTime(_selectedDate, _endTime);
 
     if (endDateTime.isBefore(startDateTime) || endDateTime.isAtSameMomentAs(startDateTime)) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('End time must be after start time')),
+        SnackBar(content: Text(l10n.translate('end_time_must_be_after_start'))),
       );
       return;
     }
 
     if (_isAvailable == false) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selected time slot is not available')),
+        SnackBar(content: Text(l10n.translate('selected_time_not_available'))),
       );
       return;
     }
 
     // Validate opponents logic
     if (_findOpponents && _opponentsNeeded <= 0) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please specify number of opponents needed')),
+        SnackBar(content: Text(l10n.translate('please_specify_opponents_needed'))),
       );
       return;
     }
@@ -132,8 +137,9 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
     if (_equipmentNeeded) {
       // Only validate if court has available equipment
       if (widget.court.getAvailableEquipment().isEmpty) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No equipment available for this sport')),
+          SnackBar(content: Text(l10n.translate('no_equipment_available'))),
         );
         return;
       }
@@ -150,8 +156,9 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
       }
       
       if (!hasEquipment) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please specify equipment quantity')),
+          SnackBar(content: Text(l10n.translate('please_specify_equipment'))),
         );
         return;
       }
@@ -178,11 +185,11 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
         // Check if opponents were found
         final matchesFound = booking.toJson()['matches_found'] as int? ?? 0;
         
-        String successMessage = 'Booking created successfully!';
+        String successMessage = l10n.translate('booking_created_successfully');
         if (_findOpponents && matchesFound > 0) {
-          successMessage += ' Found $matchesFound opponent(s)!';
+          successMessage += ' ${l10n.translate('opponents_found').replaceAll('{count}', matchesFound.toString())}';
         } else if (_findOpponents && matchesFound == 0) {
-          successMessage += ' No opponents found yet. You will be notified when someone matches.';
+          successMessage += ' ${l10n.translate('no_opponents_found_yet')}';
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -202,13 +209,13 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
         // Parse error message for better user feedback
         String errorMessage = e.toString();
         if (errorMessage.contains('WEEKLY_LIMIT_REACHED')) {
-          errorMessage = 'Weekly booking limit reached. Please try again next week.';
+          errorMessage = l10n.translate('weekly_limit_reached');
         } else if (errorMessage.contains('DURATION_EXCEEDS_LIMIT')) {
-          errorMessage = 'Booking duration exceeds your plan limit.';
+          errorMessage = l10n.translate('duration_exceeds_limit');
         } else if (errorMessage.contains('DAY_NOT_ALLOWED')) {
-          errorMessage = 'Your plan does not allow bookings on this day.';
+          errorMessage = l10n.translate('day_not_allowed');
         } else if (errorMessage.contains('equipment_rental')) {
-          errorMessage = 'Your plan does not include equipment rental.';
+          errorMessage = l10n.translate('equipment_rental_not_included');
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -320,7 +327,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
             
             // Date Selection
             Text(
-              'Select Date',
+              l10n.translate('select_date'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -351,7 +358,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
             
             // Time Selection
             Text(
-              'Select Time',
+              l10n.translate('select_time'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -372,7 +379,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Start Time',
+                            l10n.translate('start_time'),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -401,7 +408,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'End Time',
+                            l10n.translate('end_time'),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -431,7 +438,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.search),
-              label: Text(_checkingAvailability ? 'Checking...' : 'Check Availability'),
+              label: Text(_checkingAvailability ? l10n.translate('checking') : l10n.translate('check_availability')),
             ),
             
             if (_isAvailable != null) ...[
@@ -455,8 +462,8 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                     Expanded(
                       child: Text(
                         _isAvailable! 
-                            ? 'This time slot is available!' 
-                            : 'This time slot is not available',
+                            ? l10n.translate('time_slot_available')
+                            : l10n.translate('time_slot_not_available'),
                         style: TextStyle(
                           color: _isAvailable! ? Colors.green[900] : Colors.red[900],
                           fontWeight: FontWeight.w500,
@@ -472,7 +479,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
             
             // Number of Players
             Text(
-              'Number of Players',
+              l10n.translate('number_of_players'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -490,7 +497,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'How many people in your group?',
+                      l10n.translate('how_many_people_in_group'),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -535,7 +542,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Find Opponents',
+                          l10n.translate('find_opponents'),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -557,7 +564,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                     const Divider(),
                     const SizedBox(height: 12),
                     Text(
-                      'How many opponents do you need?',
+                      l10n.translate('how_many_opponents_needed'),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 8),
@@ -586,8 +593,8 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                         Expanded(
                           child: Text(
                             _opponentsNeeded > 0
-                                ? 'We will notify you when opponents are found'
-                                : 'Select number of opponents',
+                                ? l10n.translate('notify_when_opponents_found')
+                                : l10n.translate('select_number_of_opponents'),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey[600],
                               fontStyle: FontStyle.italic,
@@ -620,7 +627,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Equipment Rental',
+                          l10n.translate('equipment_rental'),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -647,7 +654,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                   if (widget.court.getAvailableEquipment().isEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'No equipment available for this sport',
+                      l10n.translate('no_equipment_available'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.grey[600],
                         fontStyle: FontStyle.italic,
@@ -659,7 +666,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                     const Divider(),
                     const SizedBox(height: 12),
                     Text(
-                      'Specify equipment quantity',
+                      l10n.translate('specify_equipment_quantity'),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -689,7 +696,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                     }).toList(),
                     const SizedBox(height: 8),
                     Text(
-                      'Note: Equipment rental availability depends on your subscription plan',
+                      l10n.translate('equipment_depends_on_plan'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.orange[900],
                         fontStyle: FontStyle.italic,
@@ -704,7 +711,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
             
             // Notes
             Text(
-              'Additional Notes (Optional)',
+              l10n.translate('additional_notes'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -713,7 +720,7 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
             TextField(
               controller: _notesController,
               decoration: InputDecoration(
-                hintText: 'Any special requests or notes...',
+                hintText: l10n.translate('add_notes'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -741,9 +748,9 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Confirm Booking',
-                      style: TextStyle(
+                  : Text(
+                      l10n.translate('confirm_booking'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
