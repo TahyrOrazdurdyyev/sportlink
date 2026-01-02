@@ -47,6 +47,15 @@ class UserModel {
     this.availabilitySchedule = const [],
   });
   
+  // Helper function to safely convert dynamic value to bool
+  // Handles cases where MongoDB returns 1.0/0.0 instead of true/false
+  static bool? _toBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    return null;
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] as String,
@@ -79,7 +88,7 @@ class UserModel {
       subscription: json['subscription'] != null
           ? UserSubscriptionInfo.fromJson(json['subscription'] as Map<String, dynamic>)
           : null,
-      availableForOpponentSearch: json['available_for_opponent_search'] as bool? ?? true,
+      availableForOpponentSearch: _toBool(json['available_for_opponent_search']) ?? true,
       availabilitySchedule: json['availability_schedule'] != null
           ? (json['availability_schedule'] as List)
               .map((day) => DayAvailability.fromJson(day as Map<String, dynamic>))

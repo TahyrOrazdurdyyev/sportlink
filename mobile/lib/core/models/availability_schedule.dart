@@ -43,10 +43,19 @@ class DayAvailability {
     this.timeSlots = const [],
   });
 
+  // Helper function to safely convert dynamic value to bool
+  // Handles cases where MongoDB returns 1.0/0.0 instead of true/false
+  static bool _toBool(dynamic value, {bool defaultValue = false}) {
+    if (value == null) return defaultValue;
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    return defaultValue;
+  }
+
   factory DayAvailability.fromJson(Map<String, dynamic> json) {
     return DayAvailability(
       day: json['day_of_week'] as String,
-      isAvailable: json['is_available'] as bool? ?? false,
+      isAvailable: _toBool(json['is_available'], defaultValue: false),
       timeSlots: json['time_slots'] != null
           ? (json['time_slots'] as List)
               .map((slot) => TimeSlot.fromJson(slot as Map<String, dynamic>))

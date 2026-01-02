@@ -15,7 +15,7 @@ class TimeSlotSerializer(serializers.Serializer):
 
 class DayAvailabilitySerializer(serializers.Serializer):
     """Serializer for day availability"""
-    day = serializers.ChoiceField(
+    day_of_week = serializers.ChoiceField(
         choices=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     )
     is_available = serializers.BooleanField(default=False)
@@ -66,6 +66,13 @@ class UserSerializer(MongoEngineModelSerializer):
         for field in boolean_fields:
             if field in ret and ret[field] is not None:
                 ret[field] = bool(ret[field])
+        
+        # Convert is_available in availability_schedule
+        if 'availability_schedule' in ret and ret['availability_schedule'] is not None:
+            for day_schedule in ret['availability_schedule']:
+                if isinstance(day_schedule, dict) and 'is_available' in day_schedule:
+                    if day_schedule['is_available'] is not None:
+                        day_schedule['is_available'] = bool(day_schedule['is_available'])
         
         return ret
     
