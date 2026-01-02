@@ -22,7 +22,7 @@ def check_availability_schedule():
         password=settings.MONGODB_PASSWORD or None,
     )
     db = client[settings.MONGODB_NAME]
-    users_collection = db['user']
+    users_collection = db['users']  # Correct collection name
     
     print("Checking all users for availability_schedule...\n")
     

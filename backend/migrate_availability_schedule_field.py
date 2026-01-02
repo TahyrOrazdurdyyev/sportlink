@@ -22,7 +22,7 @@ def migrate_availability_schedule():
         password=settings.MONGODB_PASSWORD or None,
     )
     db = client[settings.MONGODB_NAME]
-    users_collection = db['user']
+    users_collection = db['users']  # Correct collection name
     
     updated_count = 0
     
