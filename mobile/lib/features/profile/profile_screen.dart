@@ -25,14 +25,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Reload user data each time dependencies change (e.g., after login)
-    _loadUserData();
+    // Delay loading to ensure context is ready and tokens are saved
+    Future.delayed(Duration(milliseconds: 100), () {
+      if (mounted) {
+        _loadUserData();
+      }
+    });
   }
 
   Future<void> _loadUserData() async {

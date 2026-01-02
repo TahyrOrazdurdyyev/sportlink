@@ -40,7 +40,11 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     );
     
     if (success && mounted) {
-      context.go('/home');
+      // Wait a bit to ensure tokens are saved to SharedPreferences
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (mounted) {
+        context.go('/home');
+      }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
