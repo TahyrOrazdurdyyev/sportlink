@@ -122,7 +122,12 @@ def get_my_tournament_registrations(request):
     """
     Get list of tournaments the current user is registered for
     """
+    from mongoengine.errors import DoesNotExist
+    from apps.users.models import User
+    from uuid import UUID
+    
     user = request.user
+    user_id = user.id
     
     # Find all tournaments where user is a participant
     tournaments = Tournament.objects.all()
@@ -131,18 +136,46 @@ def get_my_tournament_registrations(request):
     for tournament in tournaments:
         if tournament.participants:
             for participant in tournament.participants:
-                if str(participant.user.id) == str(user.id):
-                    my_tournaments.append({
-                        'id': str(tournament.id),
-                        'name': tournament.name_i18n,
-                        'description': tournament.description_i18n,
-                        'start_date': tournament.start_date.isoformat() if tournament.start_date else None,
-                        'end_date': tournament.end_date.isoformat() if tournament.end_date else None,
-                        'status': tournament.status,
-                        'participant_status': participant.status,
-                        'registration_date': participant.registration_date.isoformat() if participant.registration_date else None,
-                    })
-                    break
+                try:
+                    # Get user ID from participant using the same approach as views_participants
+                    participant_user_id = None
+                    try:
+                        # Try to get user_ref from to_mongo().to_dict() like in views_participants
+                        participant_data = participant.to_mongo().to_dict()
+                        user_ref = participant_data.get('user')
+                        
+                        if user_ref:
+                            # Convert to UUID if needed (same as views_participants)
+                            if isinstance(user_ref, str):
+                                participant_user_id = UUID(user_ref)
+                            elif hasattr(user_ref, 'id'):
+                                participant_user_id = user_ref.id
+                            else:
+                                participant_user_id = user_ref
+                    except (AttributeError, KeyError, TypeError, ValueError):
+                        # If that fails, try direct access
+                        try:
+                            participant_user_id = participant.user.id
+                        except (DoesNotExist, AttributeError):
+                            continue
+                    
+                    # Compare user IDs
+                    if participant_user_id and participant_user_id == user_id:
+                        my_tournaments.append({
+                            'id': str(tournament.id),
+                            'name': tournament.name_i18n,
+                            'description': tournament.description_i18n,
+                            'start_date': tournament.start_date.isoformat() if tournament.start_date else None,
+                            'end_date': tournament.end_date.isoformat() if tournament.end_date else None,
+                            'status': tournament.status,
+                            'participant_status': participant.status,
+                            'registration_date': participant.registration_date.isoformat() if participant.registration_date else None,
+                        })
+                        break
+                except Exception as e:
+                    # Skip this participant if there's an error
+                    print(f"Error processing participant: {e}")
+                    continue
     
     return Response({
         'tournaments': my_tournaments
