@@ -155,12 +155,21 @@ class UserViewSet(MongoEngineModelViewSet):
         return User.objects.all()
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
-    """Get current user profile"""
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data)
+    """Get or update current user profile"""
+    if request.method == 'GET':
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+    
+    elif request.method == 'PATCH':
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            # Return updated user data with full serializer
+            return Response(UserSerializer(request.user).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
