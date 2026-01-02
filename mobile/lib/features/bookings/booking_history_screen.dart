@@ -155,7 +155,7 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> wit
             Icon(Icons.calendar_today, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              l10n.translate('no_bookings'),
+              AppLocalizations.of(context).translate('no_bookings'),
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -437,7 +437,7 @@ class _BookingHistoryScreenState extends ConsumerState<BookingHistoryScreen> wit
                       _cancelBooking(booking);
                     },
                     icon: const Icon(Icons.cancel),
-                    label: Text(l10n.translate('cancel_booking')),
+                    label: Text(AppLocalizations.of(context).translate('cancel_booking')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,

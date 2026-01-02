@@ -378,7 +378,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // First Name
                     TextFormField(
                       controller: _firstNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('first_name'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
@@ -395,7 +395,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // Last Name
                     TextFormField(
                       controller: _lastNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('last_name'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
@@ -413,7 +413,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('email'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
@@ -432,7 +432,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // City
                     TextFormField(
                       controller: _cityController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('city'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.location_city),
@@ -444,7 +444,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _ageController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('age'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.cake),
@@ -464,7 +464,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // Gender
                     DropdownButtonFormField<String>(
                       value: _selectedGender,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: l10n.translate('gender'),
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.wc),

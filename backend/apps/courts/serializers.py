@@ -46,7 +46,7 @@ class CourtSerializer(MongoEngineModelSerializer):
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
             from django.conf import settings
-            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
+            base_url = getattr(settings, 'BASE_URL', '')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):
@@ -183,7 +183,7 @@ class CourtListSerializer(MongoEngineModelSerializer):
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
             from django.conf import settings
-            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
+            base_url = getattr(settings, 'BASE_URL', '')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):
@@ -245,7 +245,7 @@ class CourtDetailSerializer(MongoEngineModelSerializer):
         # Convert relative image URLs to absolute URLs
         if ret.get('images'):
             from django.conf import settings
-            base_url = getattr(settings, 'BASE_URL', 'http://192.168.31.106:8000')
+            base_url = getattr(settings, 'BASE_URL', '')
             absolute_images = []
             for img_url in ret['images']:
                 if img_url and not img_url.startswith('http'):

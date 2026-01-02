@@ -51,6 +51,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
         });
       }
     } catch (e) {
+      print('Error loading user data: $e');
+      
+      // Если ошибка парсинга (старый кэш), очищаем и пробуем снова
+      if (e.toString().contains('type') || e.toString().contains('Null')) {
+        try {
+          await AppConfig.clearCache();
+          final authRepo = ref.read(authRepositoryProvider);
+          final user = await authRepo.getCurrentUser();
+          
+          if (mounted) {
+            setState(() {
+              _currentUser = user;
+              _isLoading = false;
+            });
+          }
+          return;
+        } catch (e2) {
+          print('Error after cache clear: $e2');
+        }
+      }
+      
       if (mounted) {
         setState(() {
           _currentUser = null;

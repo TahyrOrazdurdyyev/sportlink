@@ -1,16 +1,17 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfig {
-  // Для локальной разработки: используйте IP вашего компьютера
-  // Для продакшена: используйте доменное имя
-  static const String _localDevUrl = 'http://192.168.1.97:8000/api/v1';
-  static const String _productionUrl = 'https://api.sportlink.tm/api/v1'; // Замените на ваш домен
+  // Backend URL будет определяться автоматически из переменной окружения
+  // Для локальной разработки: flutter run --dart-define=API_BASE_URL=http://192.168.1.64:8000
+  // Для продакшена: flutter build apk --dart-define=API_BASE_URL=https://api.sportlink.tm
   
-  // Автоматически использовать production URL если задан, иначе local
-  static const String apiBaseUrl = String.fromEnvironment(
+  static const String _defaultUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: _localDevUrl, // Для локальной разработки
+    defaultValue: 'http://192.168.1.64:8000', // Fallback для разработки
   );
+  
+  static String get baseUrl => _defaultUrl;
+  static String get apiBaseUrl => '$_defaultUrl/api/v1';
   
   static SharedPreferences? _prefs;
   
@@ -27,6 +28,13 @@ class AppConfig {
   
   // Вспомогательный метод для получения базового URL медиа-файлов
   static String get mediaBaseUrl {
-    return apiBaseUrl.replaceAll('/api/v1', '');
+    return baseUrl;
+  }
+  
+  // Метод для очистки кэша (для решения проблемы с login loop)
+  static Future<void> clearCache() async {
+    await _prefs?.remove('user_data');
+    await _prefs?.remove('access_token');
+    await _prefs?.remove('refresh_token');
   }
 }

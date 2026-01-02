@@ -135,6 +135,28 @@ class AuthRepository {
     final accessToken = prefs.getString('access_token');
     return accessToken != null && accessToken.isNotEmpty;
   }
+  
+  /// Update user profile
+  Future<UserModel> updateUserProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _apiClient.dio.patch('/users/me/', data: data);
+      final user = UserModel.fromJson(response.data);
+      
+      // Update cache
+      final prefs = AppConfig.prefs;
+      await prefs.setString('user_data', jsonEncode(user.toJson()));
+      
+      return user;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data is Map) {
+        final errorData = e.response?.data as Map;
+        throw Exception(errorData['error'] ?? 'Update failed');
+      }
+      throw Exception('Update failed: ${e.message}');
+    } catch (e) {
+      throw Exception('Update failed: $e');
+    }
+  }
 }
 
 // Riverpod provider
