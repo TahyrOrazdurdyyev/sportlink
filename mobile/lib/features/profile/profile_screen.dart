@@ -580,24 +580,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
             const SizedBox(height: 16),
             const Divider(color: Colors.white30),
             const SizedBox(height: 12),
-            ...subscription.getFeaturesList().take(3).map((feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      feature,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                      ),
+            Builder(
+              builder: (context) {
+                final locale = ref.watch(localeProvider);
+                final features = subscription.getLocalizedFeaturesList(locale.languageCode).take(3);
+                return Column(
+                  children: features.map((feature) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            feature,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            )),
+                  )).toList(),
+                );
+              },
+            ),
           ],
         ],
       ),

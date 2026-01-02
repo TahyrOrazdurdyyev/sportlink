@@ -71,5 +71,58 @@ class UserSubscriptionInfo {
         .map((entry) => entry.key.replaceAll('_', ' ').toUpperCase())
         .toList();
   }
+  
+  /// Get localized feature names for enabled features
+  List<String> getLocalizedFeaturesList(String languageCode) {
+    final featureNames = {
+      'court_booking': {
+        'en': 'Court Booking',
+        'ru': 'Аренда площадки',
+        'tk': 'Meýdança ärendasy',
+      },
+      'opponent_matching': {
+        'en': 'Opponent Matching',
+        'ru': 'Подбор соперника',
+        'tk': 'Garşydaş gözleg',
+      },
+      'weekend_booking': {
+        'en': 'Weekend Booking',
+        'ru': 'Бронирование в выходные',
+        'tk': 'Dynç günleri bronlaş',
+      },
+      'tournament_registration': {
+        'en': 'Tournament Registration',
+        'ru': 'Регистрация на турниры',
+        'tk': 'Ýaryşlara gatnaşmak',
+      },
+      'equipment_rental': {
+        'en': 'Equipment Rental',
+        'ru': 'Аренда экипировки',
+        'tk': 'Enjam ärendasy',
+      },
+      'advanced_statistics': {
+        'en': 'Advanced Statistics',
+        'ru': 'Расширенная статистика',
+        'tk': 'Giňişleýin statistika',
+      },
+      'discount_court_booking': {
+        'en': 'Court Booking Discount',
+        'ru': 'Скидка на аренду',
+        'tk': 'Arzanladyş (ärendä)',
+      },
+    };
+    
+    return planFeatures.entries
+        .where((entry) => entry.value == true)
+        .map((entry) {
+          final featureKey = entry.key;
+          final names = featureNames[featureKey];
+          if (names != null) {
+            return names[languageCode] ?? names['en'] ?? featureKey.replaceAll('_', ' ').toUpperCase();
+          }
+          return featureKey.replaceAll('_', ' ').toUpperCase();
+        })
+        .toList();
+  }
 }
 
