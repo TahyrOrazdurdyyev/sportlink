@@ -48,12 +48,14 @@ def register_for_tournament(request, tournament_id):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check max participants
-    if tournament.max_participants:
-        current_count = len([p for p in (tournament.participants or []) if p.status == 'confirmed'])
-        if current_count >= tournament.max_participants:
-            return Response({
-                'error': 'Tournament is full'
-            }, status=status.HTTP_400_BAD_REQUEST)
+    if tournament.is_full():
+        return Response({
+            'error': 'Tournament is full',
+            'message': f'All {tournament.max_participants} spots have been taken. No more registrations available.',
+            'max_participants': tournament.max_participants,
+            'current_count': tournament.get_participant_count(),
+            'available_spots': 0
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     # Register user
     notes = request.data.get('notes', '')

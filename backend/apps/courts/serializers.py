@@ -6,6 +6,14 @@ from apps.core.mongoengine_drf import MongoEngineModelSerializer
 from apps.courts.models import Court
 
 
+class WorkingHoursSerializer(serializers.Serializer):
+    """Serializer for working hours"""
+    day_of_week = serializers.IntegerField(min_value=0, max_value=6)
+    is_working_day = serializers.BooleanField(default=True)
+    start_time = serializers.CharField(max_length=5, required=False, allow_blank=True)
+    end_time = serializers.CharField(max_length=5, required=False, allow_blank=True)
+
+
 class CourtSerializer(MongoEngineModelSerializer):
     """Full court serializer for admin"""
     id = serializers.UUIDField(read_only=True)
@@ -16,12 +24,13 @@ class CourtSerializer(MongoEngineModelSerializer):
         help_text="Location as [longitude, latitude]"
     )
     owner_id = serializers.UUIDField(required=False, allow_null=True)
+    working_hours = WorkingHoursSerializer(many=True, required=False)
     
     class Meta:
         model = Court
         fields = [
             'id', 'name_i18n', 'address', 'location', 'type', 
-            'owner_id', 'attributes', 'images', 'tariffs', 'is_active',
+            'owner_id', 'attributes', 'images', 'tariffs', 'working_hours', 'is_active',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -53,6 +62,7 @@ class CourtSerializer(MongoEngineModelSerializer):
         """Create court with location handling"""
         location = validated_data.pop('location', None)
         owner_id = validated_data.pop('owner_id', None)
+        working_hours_data = validated_data.pop('working_hours', None)
         
         # Handle location (convert from [lng, lat] to GeoJSON Point)
         if location and len(location) == 2:
@@ -70,6 +80,14 @@ class CourtSerializer(MongoEngineModelSerializer):
             except User.DoesNotExist:
                 raise serializers.ValidationError({'owner_id': 'Owner not found'})
         
+        # Handle working hours
+        if working_hours_data is not None:
+            from apps.courts.models import WorkingHours
+            working_hours_objects = []
+            for wh_data in working_hours_data:
+                working_hours_objects.append(WorkingHours(**wh_data))
+            validated_data['working_hours'] = working_hours_objects
+        
         court = Court(**validated_data)
         court.save()
         return court
@@ -79,6 +97,7 @@ class CourtSerializer(MongoEngineModelSerializer):
         location = validated_data.pop('location', None)
         owner_id = validated_data.pop('owner_id', None)
         tariffs_data = validated_data.pop('tariffs', None)
+        working_hours_data = validated_data.pop('working_hours', None)
         
         # Handle location
         if location and len(location) == 2:
@@ -97,6 +116,14 @@ class CourtSerializer(MongoEngineModelSerializer):
                 raise serializers.ValidationError({'owner_id': 'Owner not found'})
         elif 'owner_id' in validated_data:
             instance.owner = None
+        
+        # Handle working hours
+        if working_hours_data is not None:
+            from apps.courts.models import WorkingHours
+            working_hours_objects = []
+            for wh_data in working_hours_data:
+                working_hours_objects.append(WorkingHours(**wh_data))
+            instance.working_hours = working_hours_objects
         
         # Handle tariffs - convert dicts to Tariff instances
         if tariffs_data is not None:
@@ -121,12 +148,13 @@ class CourtListSerializer(MongoEngineModelSerializer):
     """Court list serializer (minimal fields)"""
     distance = serializers.SerializerMethodField()
     category_info = serializers.SerializerMethodField()
+    working_hours = WorkingHoursSerializer(many=True, read_only=True)
     
     class Meta:
         model = Court
         fields = [
             'id', 'name_i18n', 'address', 'type', 'images',
-            'is_active', 'distance', 'category_info'
+            'is_active', 'distance', 'category_info', 'working_hours'
         ]
     
     def get_distance(self, obj):
@@ -171,13 +199,14 @@ class CourtDetailSerializer(MongoEngineModelSerializer):
     """Detailed court serializer"""
     availability = serializers.SerializerMethodField()
     category_info = serializers.SerializerMethodField()
+    working_hours = WorkingHoursSerializer(many=True, read_only=True)
     
     class Meta:
         model = Court
         fields = [
             'id', 'name_i18n', 'address', 'location', 'type', 'owner',
             'attributes', 'images', 'tariffs', 'availability', 'category_info',
-            'is_active', 'created_at'
+            'working_hours', 'is_active', 'created_at'
         ]
     
     def get_category_info(self, obj):

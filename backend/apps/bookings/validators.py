@@ -9,8 +9,9 @@ from apps.bookings.models import Booking
 class BookingValidator:
     """Validator for booking requests against subscription limits"""
     
-    def __init__(self, user, start_time, end_time):
+    def __init__(self, user, court, start_time, end_time):
         self.user = user
+        self.court = court
         self.start_time = start_time
         self.end_time = end_time
         self.duration_hours = (end_time - start_time).total_seconds() / 3600
@@ -20,6 +21,8 @@ class BookingValidator:
         
     def validate(self):
         """Run all validation checks"""
+        self._check_court_working_hours()
+        self._check_time_slot_availability()
         self._check_subscription()
         if self.subscription:
             self._check_feature_access()
@@ -42,6 +45,69 @@ class BookingValidator:
                 'code': 'NO_SUBSCRIPTION',
                 'message': 'No active subscription found',
                 'field': 'subscription'
+            })
+    
+    def _check_court_working_hours(self):
+        """Check if the booking time is within court's working hours"""
+        if not self.court.working_hours:
+            # No working hours set, allow booking anytime
+            return
+        
+        # Get day of week (0=Monday, 6=Sunday)
+        booking_day = self.start_time.weekday()
+        booking_start_time = self.start_time.strftime('%H:%M')
+        booking_end_time = self.end_time.strftime('%H:%M')
+        
+        # Find working hours for this day
+        day_schedule = None
+        for wh in self.court.working_hours:
+            if wh.day_of_week == booking_day:
+                day_schedule = wh
+                break
+        
+        if not day_schedule:
+            self.errors.append({
+                'code': 'COURT_CLOSED',
+                'message': f'Court is not available on this day',
+                'field': 'start_time'
+            })
+            return
+        
+        if not day_schedule.is_working_day:
+            self.errors.append({
+                'code': 'COURT_CLOSED',
+                'message': f'Court is closed on this day',
+                'field': 'start_time'
+            })
+            return
+        
+        # Check if booking time is within working hours
+        if day_schedule.start_time and day_schedule.end_time:
+            if booking_start_time < day_schedule.start_time or booking_end_time > day_schedule.end_time:
+                self.errors.append({
+                    'code': 'OUTSIDE_WORKING_HOURS',
+                    'message': f'Court is only available from {day_schedule.start_time} to {day_schedule.end_time}',
+                    'field': 'start_time',
+                    'available_hours': {
+                        'start': day_schedule.start_time,
+                        'end': day_schedule.end_time
+                    }
+                })
+    
+    def _check_time_slot_availability(self):
+        """Check if the time slot is already booked"""
+        overlapping_bookings = Booking.objects(
+            court=self.court,
+            status__in=['pending', 'confirmed'],
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time
+        )
+        
+        if overlapping_bookings.count() > 0:
+            self.errors.append({
+                'code': 'TIME_SLOT_OCCUPIED',
+                'message': 'This time slot is already booked',
+                'field': 'start_time'
             })
     
     def _check_feature_access(self):

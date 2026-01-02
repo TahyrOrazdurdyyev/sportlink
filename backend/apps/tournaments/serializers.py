@@ -10,6 +10,8 @@ class TournamentSerializer(MongoEngineModelSerializer):
     """Full tournament serializer for admin"""
     id = serializers.UUIDField(read_only=True)
     participant_count = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
+    available_spots = serializers.SerializerMethodField()
     
     class Meta:
         model = Tournament
@@ -19,7 +21,7 @@ class TournamentSerializer(MongoEngineModelSerializer):
             'start_date', 'end_date', 'registration_deadline',
             'max_participants', 'min_participants',
             'registration_open', 'registration_fee',
-            'status', 'participant_count', 'categories', 'rules', 'prizes',
+            'status', 'participant_count', 'is_full', 'available_spots', 'categories', 'rules', 'prizes',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -28,6 +30,8 @@ class TournamentSerializer(MongoEngineModelSerializer):
         """Override to add participant_count and fix booleans"""
         ret = super().to_representation(instance)
         ret['participant_count'] = self.get_participant_count(instance)
+        ret['is_full'] = self.get_is_full(instance)
+        ret['available_spots'] = self.get_available_spots(instance)
         # Ensure booleans are actual booleans, not numbers
         ret['registration_open'] = bool(instance.registration_open)
         
@@ -42,6 +46,14 @@ class TournamentSerializer(MongoEngineModelSerializer):
     def get_participant_count(self, obj):
         """Get count of accepted participants"""
         return obj.get_participant_count()
+    
+    def get_is_full(self, obj):
+        """Check if tournament is full"""
+        return obj.is_full()
+    
+    def get_available_spots(self, obj):
+        """Get number of available spots"""
+        return max(0, obj.max_participants - obj.get_participant_count())
 
 
 class TournamentParticipantSerializer(serializers.Serializer):

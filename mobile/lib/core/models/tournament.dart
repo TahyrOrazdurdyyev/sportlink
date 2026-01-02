@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Tournament {
@@ -19,6 +20,8 @@ class Tournament {
   final double registrationFee;
   final String status;
   final int participantCount;
+  final bool? isFull;
+  final int? availableSpots;
   final List<String>? categories;
   final String? rules;
   final Map<String, dynamic>? prizes;
@@ -42,6 +45,8 @@ class Tournament {
     required this.registrationFee,
     required this.status,
     required this.participantCount,
+    this.isFull,
+    this.availableSpots,
     this.categories,
     this.rules,
     this.prizes,
@@ -69,6 +74,8 @@ class Tournament {
       registrationFee: (json['registration_fee'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String? ?? 'draft',
       participantCount: (json['participant_count'] as num?)?.toInt() ?? 0,
+      isFull: json['is_full'] as bool?,
+      availableSpots: (json['available_spots'] as num?)?.toInt(),
       categories: (json['categories'] as List?)?.map((e) => e as String).toList(),
       rules: json['rules'] as String?,
       prizes: json['prizes'] as Map<String, dynamic>?,
@@ -123,12 +130,14 @@ class Tournament {
     if (!registrationOpen) return false;
     if (status != 'open' && status != 'draft') return false;
     if (registrationDeadline != null && DateTime.now().isAfter(registrationDeadline!)) return false;
+    if (isFull == true) return false;
     if (participantCount >= maxParticipants) return false;
     return true;
   }
 
   int getSpotsLeft() {
-    return maxParticipants - participantCount;
+    if (availableSpots != null) return availableSpots!;
+    return max(0, maxParticipants - participantCount);
   }
 
   bool hasExternalRegistration() {

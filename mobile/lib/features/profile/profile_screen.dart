@@ -5,6 +5,8 @@ import 'package:sportlink/features/auth/data/models/user_model.dart';
 import 'package:sportlink/core/config/app_config.dart';
 import 'package:sportlink/core/l10n/app_localizations.dart';
 import 'package:sportlink/core/providers/locale_provider.dart';
+import 'package:sportlink/features/tournaments/presentation/screens/my_tournaments_screen.dart';
+import 'package:sportlink/features/profile/availability_schedule_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -231,6 +233,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                   // Subscription Card
                   _buildSubscriptionCard(),
                   
+                  const SizedBox(height: 16),
+                  
+                  // Opponent Search Mode Card
+                  _buildOpponentSearchCard(),
+                  
                   const SizedBox(height: 24),
                   
                   // Action Buttons
@@ -247,6 +254,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                     label: l10n.translate('booking_history'),
                     onTap: () {
                       Navigator.pushNamed(context, '/booking-history');
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActionButton(
+                    icon: Icons.emoji_events,
+                    label: l10n.translate('my_tournaments'),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const MyTournamentsScreen(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 12),
@@ -533,6 +552,160 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
   
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Widget _buildOpponentSearchCard() {
+    final l10n = AppLocalizations.of(context);
+    final isActive = _currentUser?.availableForOpponentSearch ?? true;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.people_alt,
+                color: isActive ? Colors.green : Colors.grey,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.translate('opponent_search_mode'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.translate('opponent_search_description'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isActive,
+                onChanged: (value) => _toggleOpponentSearchMode(value),
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isActive ? Icons.check_circle : Icons.cancel,
+                      size: 16,
+                      color: isActive ? Colors.green : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isActive 
+                        ? l10n.translate('opponent_search_active')
+                        : l10n.translate('opponent_search_inactive'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? Colors.green : Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              if (isActive)
+                TextButton.icon(
+                  onPressed: () async {
+                    if (_currentUser != null) {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => AvailabilityScheduleScreen(user: _currentUser!),
+                        ),
+                      );
+                      if (result == true) {
+                        _loadUserData(); // Reload user data after schedule update
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.schedule, size: 18),
+                  label: Text(l10n.translate('set_schedule')),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleOpponentSearchMode(bool value) async {
+    final l10n = AppLocalizations.of(context);
+    
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.updateUserProfile({
+        'available_for_opponent_search': value,
+      });
+      
+      // Reload user data
+      await _loadUserData();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              value 
+                ? l10n.translate('opponent_search_enabled')
+                : l10n.translate('opponent_search_disabled')
+            ),
+            backgroundColor: value ? Colors.green : Colors.grey,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update setting: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildActionButton({

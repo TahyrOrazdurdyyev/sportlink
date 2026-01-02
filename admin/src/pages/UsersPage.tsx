@@ -506,7 +506,7 @@ export default function UsersPage() {
                           {formatDate(user.subscription_end_date)}
                         </Typography>
                         {new Date(user.subscription_end_date) < new Date() && (
-                          <Chip label="Expired" color="error" size="small" sx={{ mt: 0.5 }} />
+                          <Chip label={t('expired')} color="error" size="small" sx={{ mt: 0.5 }} />
                         )}
                       </Box>
                     ) : (
@@ -741,7 +741,7 @@ export default function UsersPage() {
         fullWidth
       >
         <DialogTitle>
-          {editingUser?.subscription_plan ? 'Manage' : 'Create'} Subscription - {editingUser?.first_name || editingUser?.last_name 
+          {editingUser?.subscription_plan ? t('manage') : t('create')} {t('subscription')} - {editingUser?.first_name || editingUser?.last_name 
             ? `${editingUser?.first_name || ''} ${editingUser?.last_name || ''}`.trim()
             : editingUser?.phone}
         </DialogTitle>
@@ -749,16 +749,16 @@ export default function UsersPage() {
           {editingUser?.subscription_plan && (
             <Box sx={{ mb: 3, p: 2, bgcolor: '#e3f2fd', borderRadius: 1, border: '1px solid #2196f3' }}>
               <Typography variant="subtitle2" color="primary" gutterBottom>
-                <strong>Current Subscription:</strong>
+                <strong>{t('currentSubscription')}:</strong>
               </Typography>
               <Typography variant="body2" sx={{ mb: 0.5 }}>
-                Plan: {editingUser.subscription_plan.en || editingUser.subscription_plan.ru || editingUser.subscription_plan.tk}
+                {t('plan')}: {editingUser.subscription_plan.en || editingUser.subscription_plan.ru || editingUser.subscription_plan.tk}
               </Typography>
               <Typography variant="body2" sx={{ mb: 0.5 }}>
-                Expires: {formatDate(editingUser.subscription_end_date)}
+                {t('expires')}: {formatDate(editingUser.subscription_end_date)}
               </Typography>
               {editingUser.subscription_end_date && new Date(editingUser.subscription_end_date) < new Date() && (
-                <Chip label="EXPIRED" color="error" size="small" sx={{ mt: 1 }} />
+                <Chip label={t('expired').toUpperCase()} color="error" size="small" sx={{ mt: 1 }} />
               )}
               <Button
                 variant="outlined"
@@ -774,18 +774,18 @@ export default function UsersPage() {
                 }}
                 startIcon={<Block />}
               >
-                Cancel Current Subscription
+                {t('cancelCurrentSubscription')}
               </Button>
             </Box>
           )}
           <Box sx={{ mt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              {editingUser?.subscription_plan ? 'Create New Subscription (will replace current)' : 'Create New Subscription'}
+              {editingUser?.subscription_plan ? `${t('createNewSubscription')} ${t('willReplaceCurrent')}` : t('createNewSubscription')}
             </Typography>
             <TextField
               select
               fullWidth
-              label="Subscription Plan"
+              label={t('subscriptionPlan')}
               value={subscriptionFormData.plan_id}
               onChange={(e) => setSubscriptionFormData({ 
                 ...subscriptionFormData, 
@@ -796,7 +796,7 @@ export default function UsersPage() {
             >
               {subscriptionPlans.map((plan) => (
                 <MenuItem key={plan.id} value={plan.id}>
-                  {plan.name.en || plan.name.ru || plan.name.tk} - {plan.monthly_price} {plan.currency}/month
+                  {plan.name.en || plan.name.ru || plan.name.tk} - {plan.monthly_price} {plan.currency}/{t('month')}
                 </MenuItem>
               ))}
             </TextField>
@@ -804,7 +804,7 @@ export default function UsersPage() {
             <TextField
               fullWidth
               type="number"
-              label="Duration (days)"
+              label={`${t('duration')} (${t('days')})`}
               value={subscriptionFormData.duration_days}
               onChange={(e) => setSubscriptionFormData({ 
                 ...subscriptionFormData, 

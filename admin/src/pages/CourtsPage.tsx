@@ -33,6 +33,14 @@ import {
 } from '@mui/icons-material'
 import apiClient from '../api/client'
 import { CourtImageUpload } from '../components/CourtImageUpload'
+import { WorkingHoursEditor } from '../components/WorkingHoursEditor'
+
+interface WorkingHours {
+  day_of_week: number
+  is_working_day: boolean
+  start_time: string
+  end_time: string
+}
 
 interface Court {
   id: string
@@ -45,6 +53,7 @@ interface Court {
   type: string
   attributes?: Record<string, any>
   images?: string[]
+  working_hours?: WorkingHours[]
   is_active: boolean
   created_at: string
   updated_at: string
@@ -79,6 +88,7 @@ export default function CourtsPage() {
     type: '',
     is_active: true,
     images: [] as string[],
+    working_hours: [] as WorkingHours[],
   })
 
   const loadCourts = async () => {
@@ -119,6 +129,7 @@ export default function CourtsPage() {
         type: court.type || '',
         is_active: court.is_active,
         images: court.images || [],
+        working_hours: court.working_hours || [],
       })
     } else {
       setEditingCourt(null)
@@ -130,6 +141,7 @@ export default function CourtsPage() {
         type: '',
         is_active: true,
         images: [],
+        working_hours: [],
       })
     }
     setDialogOpen(true)
@@ -155,6 +167,7 @@ export default function CourtsPage() {
         is_active: formData.is_active,
         attributes: {},
         images: formData.images, // Передаем актуальный массив фото
+        working_hours: formData.working_hours, // Добавляем расписание
       }
 
       if (editingCourt) {
@@ -378,6 +391,14 @@ export default function CourtsPage() {
               label={t('active')}
               sx={{ mt: 2 }}
             />
+
+            {/* Working Hours */}
+            <Box sx={{ mt: 3 }}>
+              <WorkingHoursEditor
+                workingHours={formData.working_hours}
+                onChange={(workingHours) => setFormData({ ...formData, working_hours: workingHours })}
+              />
+            </Box>
 
             {/* Image Upload - only show when editing existing court */}
             {editingCourt ? (

@@ -3,8 +3,23 @@ User serializers for MongoDB
 """
 from rest_framework import serializers
 from apps.core.mongoengine_drf import MongoEngineModelSerializer
-from apps.users.models import User, UserCategory
+from apps.users.models import User, UserCategory, DayAvailability, TimeSlot
 from apps.categories.models import Category
+
+
+class TimeSlotSerializer(serializers.Serializer):
+    """Serializer for time slot"""
+    start_time = serializers.CharField(max_length=5)  # "HH:MM"
+    end_time = serializers.CharField(max_length=5)    # "HH:MM"
+
+
+class DayAvailabilitySerializer(serializers.Serializer):
+    """Serializer for day availability"""
+    day = serializers.ChoiceField(
+        choices=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    )
+    is_available = serializers.BooleanField(default=False)
+    time_slots = TimeSlotSerializer(many=True, required=False, allow_empty=True)
 
 
 class UserCategorySerializer(serializers.Serializer):
@@ -29,6 +44,7 @@ class UserSerializer(MongoEngineModelSerializer):
     """Full user serializer"""
     favorite_sports = UserCategorySerializer(many=True, required=False)
     subscription = serializers.SerializerMethodField()
+    availability_schedule = DayAvailabilitySerializer(many=True, required=False)
     
     class Meta:
         model = User
@@ -36,6 +52,7 @@ class UserSerializer(MongoEngineModelSerializer):
             'id', 'phone', 'nickname', 'email', 'first_name', 'last_name', 'birth_date',
             'age', 'gender', 'city', 'location', 'favorite_sports', 'experience_level',
             'preferred_ball', 'goals', 'rating', 'avatar_url', 'is_active',
+            'available_for_opponent_search', 'availability_schedule',
             'created_at', 'updated_at', 'last_active_at', 'subscription'
         ]
         read_only_fields = ['id', 'rating', 'created_at', 'updated_at', 'subscription']
@@ -127,13 +144,15 @@ class UserUpdateSerializer(MongoEngineModelSerializer):
         allow_null=True
     )
     favorite_sports = UserCategorySerializer(many=True, required=False)
+    availability_schedule = DayAvailabilitySerializer(many=True, required=False)
     
     class Meta:
         model = User
         fields = [
             'first_name', 'last_name', 'email', 'birth_date', 'age', 'gender',
             'city', 'location', 'favorite_sports', 'experience_level',
-            'preferred_ball', 'goals', 'avatar_url'
+            'preferred_ball', 'goals', 'avatar_url', 'available_for_opponent_search',
+            'availability_schedule'
         ]
     
     def update(self, instance, validated_data):
@@ -159,6 +178,28 @@ class UserUpdateSerializer(MongoEngineModelSerializer):
                 favorite_sports_objects.append(user_category)
             validated_data['favorite_sports'] = favorite_sports_objects
         
+        # Handle availability_schedule (convert from dict to DayAvailability objects)
+        availability_data = validated_data.pop('availability_schedule', None)
+        if availability_data is not None:
+            from apps.users.models import DayAvailability, TimeSlot
+            availability_objects = []
+            for day_data in availability_data:
+                time_slots = []
+                for slot_data in day_data.get('time_slots', []):
+                    time_slot = TimeSlot(
+                        start_time=slot_data['start_time'],
+                        end_time=slot_data['end_time']
+                    )
+                    time_slots.append(time_slot)
+                
+                day_availability = DayAvailability(
+                    day=day_data['day'],
+                    is_available=day_data.get('is_available', False),
+                    time_slots=time_slots
+                )
+                availability_objects.append(day_availability)
+            validated_data['availability_schedule'] = availability_objects
+        
         return super().update(instance, validated_data)
 
 
@@ -171,6 +212,7 @@ class AdminUserSerializer(MongoEngineModelSerializer):
         fields = [
             'id', 'phone', 'nickname', 'email', 'first_name', 'last_name',
             'is_active', 'is_banned', 'is_staff', 'is_superuser',
+            'available_for_opponent_search',
             'created_at', 'updated_at', 'last_active_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

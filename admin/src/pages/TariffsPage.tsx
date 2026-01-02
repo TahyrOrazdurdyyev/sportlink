@@ -281,7 +281,7 @@ const TariffsPage = () => {
               <TableCell>{t('monthlyPrice')}</TableCell>
               <TableCell>{t('yearlyPrice')}</TableCell>
               <TableCell>{t('features')}</TableCell>
-              <TableCell>Ограничения</TableCell>
+              <TableCell>{t('limitations')}</TableCell>
               <TableCell>{t('status')}</TableCell>
               <TableCell>{t('actions')}</TableCell>
             </TableRow>
@@ -501,12 +501,12 @@ const TariffsPage = () => {
               <Card variant="outlined" sx={{ mt: 2, bgcolor: 'error.light', borderColor: 'error.main' }}>
                 <CardContent>
                   <Typography variant="subtitle2" fontWeight="bold" color="error.dark" gutterBottom>
-                    💰 Цены со скидкой {formData.discount_percentage}%
+                    💰 {t('discountedPrices')} {formData.discount_percentage}%
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Месячная цена:
+                        {t('monthlyPrice')}:
                       </Typography>
                       <Typography variant="body2" sx={{ textDecoration: 'line-through' }}>
                         {formData.monthly_price} TMT
@@ -517,7 +517,7 @@ const TariffsPage = () => {
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
-                        Годовая цена:
+                        {t('yearlyPrice')}:
                       </Typography>
                       <Typography variant="body2" sx={{ textDecoration: 'line-through' }}>
                         {formData.yearly_price} TMT

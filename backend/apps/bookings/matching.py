@@ -8,6 +8,63 @@ from apps.users.models import User
 from apps.bookings.models import Booking
 
 
+def is_user_available_at_time(user, booking_datetime):
+    """
+    Check if user is available at the given booking time based on their availability schedule.
+    
+    Args:
+        user: User object
+        booking_datetime: datetime object of the booking start time
+    
+    Returns:
+        bool: True if user is available, False otherwise
+    """
+    # If user has no availability schedule, consider them available (backward compatibility)
+    if not user.availability_schedule or len(user.availability_schedule) == 0:
+        return True
+    
+    # Get day of week (0=Monday, 6=Sunday)
+    day_names = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    day_of_week = booking_datetime.weekday()
+    day_name = day_names[day_of_week]
+    
+    # Find availability for this day
+    day_availability = None
+    for day_avail in user.availability_schedule:
+        if day_avail.day == day_name:
+            day_availability = day_avail
+            break
+    
+    # If day not found or not available, user is not available
+    if not day_availability or not day_availability.is_available:
+        return False
+    
+    # If no time slots specified but day is available, consider available for whole day
+    if not day_availability.time_slots or len(day_availability.time_slots) == 0:
+        return True
+    
+    # Check if booking time falls within any of the user's available time slots
+    booking_time = booking_datetime.time()
+    
+    for time_slot in day_availability.time_slots:
+        try:
+            # Parse time slot strings (format: "HH:MM")
+            start_parts = time_slot.start_time.split(':')
+            end_parts = time_slot.end_time.split(':')
+            
+            slot_start = datetime.strptime(time_slot.start_time, '%H:%M').time()
+            slot_end = datetime.strptime(time_slot.end_time, '%H:%M').time()
+            
+            # Check if booking time is within this slot
+            if slot_start <= booking_time <= slot_end:
+                return True
+        except (ValueError, AttributeError):
+            # If time parsing fails, skip this slot
+            continue
+    
+    return False
+
+
 class OpponentMatch(Document):
     """Model to track opponent matches"""
     
@@ -121,6 +178,7 @@ def find_opponent_for_booking(booking):
     """
     Find an opponent for a booking.
     Returns a list of potential opponents (users looking for opponents at the same time/court).
+    Only includes users who have enabled opponent search mode.
     """
     if not booking.find_opponents or booking.opponents_needed <= 0:
         return []
@@ -136,8 +194,18 @@ def find_opponent_for_booking(booking):
     )
     
     # Filter out bookings that already have enough opponents
+    # AND filter out users who disabled opponent search
+    # AND filter out users who are not available at this time
     candidates = []
     for match in potential_matches:
+        # Check if user is available for opponent search
+        if not match.user.available_for_opponent_search:
+            continue
+        
+        # Check if user is available at this booking time based on their schedule
+        if not is_user_available_at_time(match.user, booking.start_time):
+            continue
+        
         # Check if this booking still needs opponents
         current_matches = OpponentMatch.objects(
             booking=match,

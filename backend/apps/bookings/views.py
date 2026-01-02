@@ -42,8 +42,17 @@ class BookingViewSet(MongoEngineModelViewSet):
         end_time = parser.parse(request.data.get('end_time'))
         equipment_needed = request.data.get('equipment_needed', False)
         
+        # Get court
+        try:
+            from apps.courts.models import Court
+            court = Court.objects.get(id=court_id)
+        except Court.DoesNotExist:
+            return Response({
+                'error': 'Court not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
         # Validate subscription and tariff limits
-        validator = BookingValidator(request.user, start_time, end_time)
+        validator = BookingValidator(request.user, court, start_time, end_time)
         if not validator.validate():
             return Response({
                 'error': 'Booking validation failed',

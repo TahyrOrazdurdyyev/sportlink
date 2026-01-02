@@ -7,6 +7,22 @@ from mongoengine import Document, EmbeddedDocument, fields
 from django.contrib.auth.hashers import make_password, check_password
 
 
+class TimeSlot(EmbeddedDocument):
+    """Time slot for availability"""
+    start_time = fields.StringField(required=True)  # Format: "HH:MM" (e.g., "09:00")
+    end_time = fields.StringField(required=True)    # Format: "HH:MM" (e.g., "18:00")
+
+
+class DayAvailability(EmbeddedDocument):
+    """Availability for a specific day of the week"""
+    day = fields.StringField(
+        required=True,
+        choices=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    )
+    is_available = fields.BooleanField(default=False)
+    time_slots = fields.ListField(fields.EmbeddedDocumentField(TimeSlot), default=list)
+
+
 class UserCategory(EmbeddedDocument):
     """Embedded category for user interests with experience level"""
     category_id = fields.UUIDField(required=True)  # Changed to UUID to match Category model
@@ -60,6 +76,10 @@ class User(Document):
     is_banned = fields.BooleanField(default=False)
     is_staff = fields.BooleanField(default=False)
     is_superuser = fields.BooleanField(default=False)
+    
+    # Opponent search availability
+    available_for_opponent_search = fields.BooleanField(default=True)  # Allow others to find this user as opponent
+    availability_schedule = fields.ListField(fields.EmbeddedDocumentField(DayAvailability), default=list)  # Weekly availability schedule
     
     # Timestamps
     created_at = fields.DateTimeField(default=datetime.utcnow)

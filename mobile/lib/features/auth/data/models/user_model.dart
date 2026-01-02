@@ -1,5 +1,6 @@
 import 'package:sportlink/core/models/favorite_sport.dart';
 import 'package:sportlink/core/models/user_subscription_info.dart';
+import 'package:sportlink/core/models/availability_schedule.dart';
 
 class UserModel {
   final String id;
@@ -20,6 +21,8 @@ class UserModel {
   final double rating;
   final String? avatarUrl;
   final UserSubscriptionInfo? subscription;
+  final bool availableForOpponentSearch;
+  final List<DayAvailability> availabilitySchedule;
   
   UserModel({
     required this.id,
@@ -40,6 +43,8 @@ class UserModel {
     this.rating = 0.0,
     this.avatarUrl,
     this.subscription,
+    this.availableForOpponentSearch = true,
+    this.availabilitySchedule = const [],
   });
   
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -74,6 +79,12 @@ class UserModel {
       subscription: json['subscription'] != null
           ? UserSubscriptionInfo.fromJson(json['subscription'] as Map<String, dynamic>)
           : null,
+      availableForOpponentSearch: json['available_for_opponent_search'] as bool? ?? true,
+      availabilitySchedule: json['availability_schedule'] != null
+          ? (json['availability_schedule'] as List)
+              .map((day) => DayAvailability.fromJson(day as Map<String, dynamic>))
+              .toList()
+          : [],
     );
   }
   
@@ -97,6 +108,8 @@ class UserModel {
       'rating': rating,
       'avatar_url': avatarUrl,
       'subscription': subscription?.toJson(),
+      'available_for_opponent_search': availableForOpponentSearch,
+      'availability_schedule': availabilitySchedule.map((day) => day.toJson()).toList(),
     };
   }
   
@@ -119,6 +132,8 @@ class UserModel {
     double? rating,
     String? avatarUrl,
     UserSubscriptionInfo? subscription,
+    bool? availableForOpponentSearch,
+    List<DayAvailability>? availabilitySchedule,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -139,6 +154,8 @@ class UserModel {
       rating: rating ?? this.rating,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       subscription: subscription ?? this.subscription,
+      availableForOpponentSearch: availableForOpponentSearch ?? this.availableForOpponentSearch,
+      availabilitySchedule: availabilitySchedule ?? this.availabilitySchedule,
     );
   }
 }

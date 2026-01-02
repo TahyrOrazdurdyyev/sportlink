@@ -1,3 +1,5 @@
+import 'working_hours.dart';
+
 class Court {
   final String id;
   final Map<String, String> nameI18n;
@@ -10,6 +12,7 @@ class Court {
   final Map<String, dynamic>? features;
   final bool? isActive;
   final CategoryInfo? categoryInfo; // Added category info with equipment
+  final List<WorkingHours>? workingHours; // Added working hours
 
   Court({
     required this.id,
@@ -23,6 +26,7 @@ class Court {
     this.features,
     this.isActive,
     this.categoryInfo,
+    this.workingHours,
   });
 
   factory Court.fromJson(Map<String, dynamic> json) {
@@ -51,6 +55,11 @@ class Court {
           : null,
       categoryInfo: json['category_info'] != null
           ? CategoryInfo.fromJson(json['category_info'] as Map<String, dynamic>)
+          : null,
+      workingHours: json['working_hours'] != null
+          ? (json['working_hours'] as List)
+              .map((e) => WorkingHours.fromJson(e as Map<String, dynamic>))
+              .toList()
           : null,
     );
   }

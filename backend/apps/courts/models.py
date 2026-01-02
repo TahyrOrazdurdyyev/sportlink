@@ -31,6 +31,14 @@ class AvailabilitySlot(EmbeddedDocument):
     booking_id = fields.UUIDField()  # Reference to booking
 
 
+class WorkingHours(EmbeddedDocument):
+    """Working hours for a specific day of the week"""
+    day_of_week = fields.IntField(required=True, min_value=0, max_value=6)  # 0=Monday, 6=Sunday
+    is_working_day = fields.BooleanField(default=True)
+    start_time = fields.StringField(max_length=5)  # HH:MM format, e.g., "09:00"
+    end_time = fields.StringField(max_length=5)  # HH:MM format, e.g., "22:00"
+
+
 class Court(Document):
     """Sports court/field for MongoDB"""
     
@@ -53,6 +61,9 @@ class Court(Document):
     
     # Tariffs
     tariffs = fields.ListField(fields.EmbeddedDocumentField(Tariff))
+    
+    # Working hours (regular schedule)
+    working_hours = fields.ListField(fields.EmbeddedDocumentField(WorkingHours))
     
     # Availability (embedded slots)
     availability_slots = fields.ListField(fields.EmbeddedDocumentField(AvailabilitySlot))

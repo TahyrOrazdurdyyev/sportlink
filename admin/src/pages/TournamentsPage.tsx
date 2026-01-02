@@ -58,8 +58,23 @@ interface Tournament {
   registration_fee: number
   status: string
   participant_count: number
+  is_full?: boolean
+  available_spots?: number
   created_at: string
   updated_at: string
+}
+
+interface TournamentParticipant {
+  id: string
+  phone: string
+  nickname?: string
+  first_name?: string
+  last_name?: string
+  email?: string
+  status: string
+  registration_date?: string
+  payment_status: string
+  notes?: string
 }
 
 const STATUS_OPTIONS = [
@@ -83,6 +98,10 @@ export default function TournamentsPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false)
+  const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null)
+  const [participants, setParticipants] = useState<TournamentParticipant[]>([])
+  const [loadingParticipants, setLoadingParticipants] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -122,6 +141,25 @@ export default function TournamentsPage() {
   useEffect(() => {
     loadTournaments()
   }, [])
+
+  const loadParticipants = async (tournamentId: string) => {
+    try {
+      setLoadingParticipants(true)
+      const response = await apiClient.get(`/admin/tournaments/${tournamentId}/participants/`)
+      setParticipants(response.data.participants || [])
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to load participants')
+      setParticipants([])
+    } finally {
+      setLoadingParticipants(false)
+    }
+  }
+
+  const handleViewParticipants = async (tournament: Tournament) => {
+    setSelectedTournament(tournament)
+    setParticipantsDialogOpen(true)
+    await loadParticipants(tournament.id)
+  }
 
   const handleOpenDialog = (tournament?: Tournament) => {
     if (tournament) {
@@ -196,6 +234,26 @@ export default function TournamentsPage() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const getLocalizedStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'applied': t('applied'),
+      'accepted': t('accepted'),
+      'rejected': t('rejected'),
+      'paid': t('paid'),
+      'participated': t('participated'),
+    }
+    return statusMap[status] || status
+  }
+
+  const getLocalizedPaymentStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'pending': t('pending'),
+      'paid': t('paid'),
+      'refunded': t('refunded'),
+    }
+    return statusMap[status] || status
   }
 
   const handleUploadImage = async (tournamentId: string) => {
@@ -382,14 +440,24 @@ export default function TournamentsPage() {
                   </TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <PeopleIcon fontSize="small" color="action" />
+                      <PeopleIcon fontSize="small" color={tournament.is_full ? "error" : "action"} />
                       <Typography variant="body2">
                         {tournament.participant_count} / {tournament.max_participants}
                       </Typography>
+                      {tournament.is_full && (
+                        <Chip label="Full" size="small" color="error" />
+                      )}
+                      {tournament.available_spots !== undefined && tournament.available_spots > 0 && (
+                        <Chip 
+                          label={`${tournament.available_spots} ${t('spotsLeft')}`} 
+                          size="small" 
+                          color="success" 
+                        />
+                      )}
                     </Box>
                   </TableCell>
                   <TableCell>
-                    {tournament.registration_fee > 0 ? `${tournament.registration_fee} TMT` : 'Free'}
+                    {tournament.registration_fee > 0 ? `${tournament.registration_fee} TMT` : t('free')}
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -402,6 +470,14 @@ export default function TournamentsPage() {
                     {new Date(tournament.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleViewParticipants(tournament)}
+                      color="info"
+                      title="View Participants"
+                    >
+                      <PeopleIcon />
+                    </IconButton>
                     <IconButton
                       size="small"
                       onClick={() => handleOpenDialog(tournament)}
@@ -427,16 +503,16 @@ export default function TournamentsPage() {
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingTournament ? 'Edit Tournament' : 'Create Tournament'}
+          {editingTournament ? t('editTournament') : t('createTournament')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Tournament Names
+              {t('tournamentNames')}
             </Typography>
             <TextField
               fullWidth
-              label="Name (Turkmen)"
+              label={t('nameTurkmen')}
               value={formData.name_tk}
               onChange={(e) => setFormData({ ...formData, name_tk: e.target.value })}
               margin="dense"
@@ -444,25 +520,25 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="Name (Russian)"
+              label={t('nameRussian')}
               value={formData.name_ru}
               onChange={(e) => setFormData({ ...formData, name_ru: e.target.value })}
               margin="dense"
             />
             <TextField
               fullWidth
-              label="Name (English)"
+              label={t('nameEnglish')}
               value={formData.name_en}
               onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
               margin="dense"
             />
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Description
+              {t('description')}
             </Typography>
             <TextField
               fullWidth
-              label="Description (Turkmen)"
+              label={t('descriptionTurkmen')}
               value={formData.description_tk}
               onChange={(e) => setFormData({ ...formData, description_tk: e.target.value })}
               margin="dense"
@@ -471,7 +547,7 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="Description (Russian)"
+              label={t('descriptionRussian')}
               value={formData.description_ru}
               onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })}
               margin="dense"
@@ -480,7 +556,7 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="Description (English)"
+              label={t('descriptionEnglish')}
               value={formData.description_en}
               onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
               margin="dense"
@@ -489,7 +565,7 @@ export default function TournamentsPage() {
             />
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Tournament Image
+              {t('tournamentImage')}
             </Typography>
             <Box sx={{ mb: 2 }}>
               {imagePreview && (
@@ -518,7 +594,7 @@ export default function TournamentsPage() {
                 </Box>
               )}
               <Button variant="outlined" component="label">
-                {imagePreview ? 'Change Image' : 'Upload Image'}
+                {imagePreview ? t('changeImage') : t('uploadImage')}
                 <input
                   type="file"
                   hidden
@@ -528,25 +604,25 @@ export default function TournamentsPage() {
               </Button>
               {selectedImage && (
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  Selected: {selectedImage.name}
+                  {t('selected')}: {selectedImage.name}
                 </Typography>
               )}
             </Box>
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Location
+              {t('location')}
             </Typography>
             <Box display="flex" gap={2}>
               <TextField
                 fullWidth
-                label="Country"
+                label={t('country')}
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 margin="dense"
               />
               <TextField
                 fullWidth
-                label="City"
+                label={t('city')}
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 margin="dense"
@@ -554,11 +630,11 @@ export default function TournamentsPage() {
             </Box>
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Organizer
+              {t('organizer')}
             </Typography>
             <TextField
               fullWidth
-              label="Organizer Name"
+              label={t('organizerName')}
               value={formData.organizer_name}
               onChange={(e) => setFormData({ ...formData, organizer_name: e.target.value })}
               margin="dense"
@@ -566,20 +642,20 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="Registration Link (Optional)"
+              label={t('registrationLinkOptional')}
               value={formData.registration_link}
               onChange={(e) => setFormData({ ...formData, registration_link: e.target.value })}
               margin="dense"
               type="url"
-              helperText="External link for registration or more info"
+              helperText={t('externalLinkHelper')}
             />
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Schedule
+              {t('schedule')}
             </Typography>
             <TextField
               fullWidth
-              label="Start Date & Time"
+              label={t('startDateTime')}
               type="datetime-local"
               value={formData.start_date}
               onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
@@ -589,7 +665,7 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="End Date & Time"
+              label={t('endDateTime')}
               type="datetime-local"
               value={formData.end_date}
               onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
@@ -599,7 +675,7 @@ export default function TournamentsPage() {
             />
             <TextField
               fullWidth
-              label="Registration Deadline"
+              label={t('registrationDeadline')}
               type="datetime-local"
               value={formData.registration_deadline}
               onChange={(e) => setFormData({ ...formData, registration_deadline: e.target.value })}
@@ -608,12 +684,12 @@ export default function TournamentsPage() {
             />
 
             <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-              Participants & Fee
+              {t('participantsAndFee')}
             </Typography>
             <Box display="flex" gap={2}>
               <TextField
                 fullWidth
-                label="Min Participants"
+                label={t('minParticipants')}
                 type="number"
                 value={formData.min_participants}
                 onChange={(e) => setFormData({ ...formData, min_participants: e.target.value })}
@@ -623,7 +699,7 @@ export default function TournamentsPage() {
               />
               <TextField
                 fullWidth
-                label="Max Participants"
+                label={t('maxParticipants')}
                 type="number"
                 value={formData.max_participants}
                 onChange={(e) => setFormData({ ...formData, max_participants: e.target.value })}
@@ -634,7 +710,7 @@ export default function TournamentsPage() {
             </Box>
             <TextField
               fullWidth
-              label="Registration Fee (TMT)"
+              label={t('registrationFeeInTMT')}
               type="number"
               value={formData.registration_fee}
               onChange={(e) => setFormData({ ...formData, registration_fee: e.target.value })}
@@ -648,17 +724,17 @@ export default function TournamentsPage() {
             <TextField
               fullWidth
               select
-              label="Status"
+              label={t('status')}
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               margin="dense"
               required
             >
-              {STATUS_OPTIONS.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
+              <MenuItem value="draft">{t('draft')}</MenuItem>
+              <MenuItem value="upcoming">{t('upcoming')}</MenuItem>
+              <MenuItem value="ongoing">{t('ongoing')}</MenuItem>
+              <MenuItem value="completed">{t('completed')}</MenuItem>
+              <MenuItem value="cancelled">{t('cancelled')}</MenuItem>
             </TextField>
 
             <FormControlLabel
@@ -668,7 +744,7 @@ export default function TournamentsPage() {
                   onChange={(e) => setFormData({ ...formData, registration_open: e.target.checked })}
                 />
               }
-              label="Registration Open"
+              label={t('registrationOpen')}
               sx={{ mt: 2 }}
             />
           </Box>
@@ -691,7 +767,7 @@ export default function TournamentsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Tournament</DialogTitle>
+        <DialogTitle>{t('deleteTournament')}</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete "
@@ -711,6 +787,117 @@ export default function TournamentsPage() {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Participants Dialog */}
+      <Dialog 
+        open={participantsDialogOpen} 
+        onClose={() => setParticipantsDialogOpen(false)} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6">
+              {t('participants')} - {selectedTournament?.name_i18n[i18n.language] || 
+                              selectedTournament?.name_i18n.en || 
+                              selectedTournament?.name_i18n.tk || 
+                              t('tournament')}
+            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <PeopleIcon />
+              <Typography variant="body2" color="text.secondary">
+                {participants.length} / {selectedTournament?.max_participants || 0}
+              </Typography>
+              {selectedTournament?.is_full && (
+                <Chip label={t('full')} size="small" color="error" />
+              )}
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {loadingParticipants ? (
+            <Box display="flex" justifyContent="center" p={3}>
+              <CircularProgress />
+            </Box>
+          ) : participants.length === 0 ? (
+            <Box textAlign="center" p={3}>
+              <PeopleIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="body1" color="text.secondary">
+                {t('noParticipantsYet')}
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('name')}</TableCell>
+                    <TableCell>{t('phone')}</TableCell>
+                    <TableCell>{t('email')}</TableCell>
+                    <TableCell>{t('status')}</TableCell>
+                    <TableCell>{t('payment')}</TableCell>
+                    <TableCell>{t('registered')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {participants.map((participant) => (
+                    <TableRow key={participant.id}>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {participant.first_name || participant.last_name
+                            ? `${participant.first_name || ''} ${participant.last_name || ''}`.trim()
+                            : participant.nickname || 'N/A'}
+                        </Typography>
+                        {participant.nickname && (participant.first_name || participant.last_name) && (
+                          <Typography variant="caption" color="text.secondary">
+                            @{participant.nickname}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{participant.phone}</TableCell>
+                      <TableCell>{participant.email || '-'}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={getLocalizedStatus(participant.status)} 
+                          size="small" 
+                          color={
+                            participant.status === 'accepted' || participant.status === 'paid' || participant.status === 'participated'
+                              ? 'success'
+                              : participant.status === 'rejected'
+                              ? 'error'
+                              : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={getLocalizedPaymentStatus(participant.payment_status)} 
+                          size="small" 
+                          color={
+                            participant.payment_status === 'paid'
+                              ? 'success'
+                              : participant.payment_status === 'refunded'
+                              ? 'warning'
+                              : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {participant.registration_date
+                          ? new Date(participant.registration_date).toLocaleDateString(i18n.language)
+                          : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setParticipantsDialogOpen(false)}>{t('close')}</Button>
         </DialogActions>
       </Dialog>
     </Box>

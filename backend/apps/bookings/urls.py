@@ -5,6 +5,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from . import views_matching
+from . import views_admin
 
 router = DefaultRouter()
 router.register(r'bookings', views.BookingViewSet, basename='booking')
@@ -27,6 +28,10 @@ urlpatterns = [
     
     # User bookings
     path('users/bookings/', views.UserBookingsView.as_view(), name='user-bookings'),
+    
+    # Admin endpoints
+    path('admin/bookings/', views_admin.list_bookings, name='admin-bookings'),
+    path('admin/bookings/statistics/', views_admin.get_booking_statistics, name='admin-booking-statistics'),
     
     # Router URLs
     path('', include(router.urls)),

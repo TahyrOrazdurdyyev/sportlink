@@ -27,6 +27,7 @@ import {
   Assessment,
   Logout,
   Notifications,
+  EventNote,
 } from '@mui/icons-material'
 import { useAuthStore } from '../stores/authStore'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -47,6 +48,7 @@ export default function Layout() {
     { text: t('tariffs'), icon: <AttachMoney />, path: '/tariffs' },
     { text: t('tournaments'), icon: <EmojiEvents />, path: '/tournaments' },
     { text: t('users'), icon: <People />, path: '/users' },
+    { text: t('bookings'), icon: <EventNote />, path: '/bookings' },
     { text: t('reports'), icon: <Assessment />, path: '/reports' },
     { text: t('notifications'), icon: <Notifications />, path: '/notifications' },
   ]

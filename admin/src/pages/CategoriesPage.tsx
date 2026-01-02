@@ -323,7 +323,7 @@ export default function CategoriesPage() {
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingCategory ? 'Edit Category' : 'Create Category'}
+          {editingCategory ? t('editCategory') : t('createCategory')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
@@ -332,7 +332,7 @@ export default function CategoriesPage() {
             </Typography>
             <TextField
               fullWidth
-              label="Name (Turkmen)"
+              label={t('nameTurkmen')}
               value={formData.name_tk}
               onChange={(e) => setFormData({ ...formData, name_tk: e.target.value })}
               margin="dense"
@@ -340,7 +340,7 @@ export default function CategoriesPage() {
             />
             <TextField
               fullWidth
-              label="Description (Turkmen)"
+              label={t('descriptionTurkmen')}
               value={formData.description_tk}
               onChange={(e) => setFormData({ ...formData, description_tk: e.target.value })}
               margin="dense"
@@ -353,14 +353,14 @@ export default function CategoriesPage() {
             </Typography>
             <TextField
               fullWidth
-              label="Name (Russian)"
+              label={t('nameRussian')}
               value={formData.name_ru}
               onChange={(e) => setFormData({ ...formData, name_ru: e.target.value })}
               margin="dense"
             />
             <TextField
               fullWidth
-              label="Description (Russian)"
+              label={t('descriptionRussian')}
               value={formData.description_ru}
               onChange={(e) => setFormData({ ...formData, description_ru: e.target.value })}
               margin="dense"
@@ -373,14 +373,14 @@ export default function CategoriesPage() {
             </Typography>
             <TextField
               fullWidth
-              label="Name (English)"
+              label={t('nameEnglish')}
               value={formData.name_en}
               onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
               margin="dense"
             />
             <TextField
               fullWidth
-              label="Description (English)"
+              label={t('descriptionEnglish')}
               value={formData.description_en}
               onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
               margin="dense"
@@ -390,10 +390,10 @@ export default function CategoriesPage() {
             
             {/* Equipment Section */}
             <Typography variant="subtitle1" gutterBottom sx={{ mt: 3, mb: 1, fontWeight: 'bold' }}>
-              Available Equipment
+              {t('availableEquipment')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Add equipment items that can be rented for this sport (e.g., balls, rackets, shin guards)
+              {t('equipmentDescription')}
             </Typography>
             
             {equipmentItems.map((item, index) => (
@@ -407,7 +407,7 @@ export default function CategoriesPage() {
                 
                 <TextField
                   fullWidth
-                  label="Equipment Key (e.g., balls, rackets)"
+                  label={t('equipmentKey')}
                   value={item.key}
                   onChange={(e) => updateEquipmentItem(index, 'key', e.target.value)}
                   margin="dense"
@@ -419,7 +419,7 @@ export default function CategoriesPage() {
                 <Box display="flex" gap={1} mt={1}>
                   <TextField
                     fullWidth
-                    label="Name (Turkmen)"
+                    label={t('nameTurkmen')}
                     value={item.name_tk}
                     onChange={(e) => updateEquipmentItem(index, 'name_tk', e.target.value)}
                     margin="dense"
@@ -427,7 +427,7 @@ export default function CategoriesPage() {
                   />
                   <TextField
                     fullWidth
-                    label="Name (Russian)"
+                    label={t('nameRussian')}
                     value={item.name_ru}
                     onChange={(e) => updateEquipmentItem(index, 'name_ru', e.target.value)}
                     margin="dense"
@@ -435,7 +435,7 @@ export default function CategoriesPage() {
                   />
                   <TextField
                     fullWidth
-                    label="Name (English)"
+                    label={t('nameEnglish')}
                     value={item.name_en}
                     onChange={(e) => updateEquipmentItem(index, 'name_en', e.target.value)}
                     margin="dense"
@@ -452,7 +452,7 @@ export default function CategoriesPage() {
               size="small"
               sx={{ mt: 1 }}
             >
-              Add Equipment Item
+              {t('addEquipment')}
             </Button>
           </Box>
         </DialogContent>
@@ -470,14 +470,14 @@ export default function CategoriesPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Category</DialogTitle>
+        <DialogTitle>{t('deleteCategory')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{categoryToDelete?.name_i18n.tk || categoryToDelete?.name_i18n.ru || categoryToDelete?.name_i18n.en}"?
+            {t('deleteCategoryConfirm')} "{categoryToDelete?.name_i18n.tk || categoryToDelete?.name_i18n.ru || categoryToDelete?.name_i18n.en}"?
           </Typography>
           {categoryToDelete && categoryToDelete.children_count > 0 && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              This category has {categoryToDelete.children_count} child categories!
+              {t('categoryHasChildren')}: {categoryToDelete.children_count}!
             </Alert>
           )}
         </DialogContent>

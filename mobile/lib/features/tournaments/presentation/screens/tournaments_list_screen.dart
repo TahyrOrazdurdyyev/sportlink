@@ -8,6 +8,7 @@ import 'package:sportlink/core/services/tournament_service.dart';
 import 'package:sportlink/core/services/subscription_service.dart';
 import 'package:sportlink/core/network/api_client.dart';
 import 'package:sportlink/core/providers/locale_provider.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
 
 class TournamentsListScreen extends ConsumerStatefulWidget {
   const TournamentsListScreen({super.key});
@@ -20,6 +21,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
   late TournamentService _tournamentService;
   late SubscriptionService _subscriptionService;
   List<Tournament> _tournaments = [];
+  Set<String> _registeredTournamentIds = {};
   bool _isLoading = true;
   String? _error;
 
@@ -42,7 +44,18 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
     });
 
     try {
+      // Load tournaments
       final tournaments = await _tournamentService.getTournaments();
+      
+      // Load user's registrations to check which tournaments they're registered for
+      try {
+        final registrations = await _tournamentService.getMyRegistrations();
+        _registeredTournamentIds = registrations.map((r) => r.id).toSet();
+      } catch (e) {
+        // If user is not authenticated or error loading registrations, just continue
+        _registeredTournamentIds = {};
+      }
+      
       if (mounted) {
         setState(() {
           _tournaments = tournaments;
@@ -224,6 +237,38 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                       ),
                     ],
                   ),
+                  
+                  // Registered indicator
+                  if (_registeredTournamentIds.contains(tournament.id)) ...[
+                    const SizedBox(height: 8),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.blue, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.translate('already_registered'),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 12),
 
                   // Description
@@ -274,28 +319,62 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
               // Participants
               Row(
                 children: [
-                  Icon(Icons.people, size: 16, color: Colors.grey[600]),
+                  Icon(
+                    Icons.people, 
+                    size: 16, 
+                    color: (tournament.isFull == true) ? Colors.red[600] : Colors.grey[600]
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '${tournament.participantCount}/${tournament.maxParticipants} participants',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: 13, 
+                      color: (tournament.isFull == true) ? Colors.red[700] : Colors.grey[700],
+                    ),
                   ),
-                  if (tournament.canRegister()) ...[
+                  if (tournament.isFull == true) ...[
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${tournament.getSpotsLeft()} spots left',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            l10n.translate('full'),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ] else if (tournament.canRegister()) ...[
+                    const SizedBox(width: 8),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${tournament.getSpotsLeft()} ${l10n.translate('spots_left')}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ],
@@ -358,8 +437,8 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                     ),
                   ),
                   
-                  // Register Button (only if can register)
-                  if (tournament.canRegister()) ...[
+                  // Register Button (only if can register and not already registered)
+                  if (tournament.canRegister() && !_registeredTournamentIds.contains(tournament.id)) ...[
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
@@ -372,6 +451,24 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
+                        ),
+                      ),
+                    ),
+                  ] else if (_registeredTournamentIds.contains(tournament.id)) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: OutlinedButton.icon(
+                        onPressed: null, // Disabled
+                        icon: const Icon(Icons.check_circle, size: 18),
+                        label: const Text('Registered'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          foregroundColor: Colors.blue,
+                          side: const BorderSide(color: Colors.blue),
                         ),
                       ),
                     ),
@@ -389,6 +486,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
 
   void _showTournamentDetails(Tournament tournament, Locale locale) {
     final DateFormat fullDateFormatter = DateFormat('dd MMMM yyyy HH:mm', locale.languageCode);
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -508,6 +606,59 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   if (tournament.organizerName != null)
                     _buildDetailRow('Organizer', tournament.organizerName!, Icons.business),
                   _buildDetailRow('Participants', '${tournament.participantCount}/${tournament.maxParticipants}', Icons.people),
+                  if (tournament.isFull == true) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              l10n.translate('tournament_full_message'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else if (tournament.canRegister() && tournament.getSpotsLeft() <= 5) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '${tournament.getSpotsLeft()} ${l10n.translate('spots_left')}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   if (tournament.registrationFee > 0)
                     _buildDetailRow('Registration Fee', '${tournament.registrationFee.toStringAsFixed(2)} TMT', Icons.attach_money),
                   
@@ -589,7 +740,25 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   ],
 
                   // Register Button
-                  if (tournament.canRegister()) ...[
+                  if (_registeredTournamentIds.contains(tournament.id)) ...[
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: null, // Disabled
+                        icon: const Icon(Icons.check_circle),
+                        label: Text(l10n.translate('already_registered')),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          foregroundColor: Colors.blue,
+                          side: const BorderSide(color: Colors.blue),
+                        ),
+                      ),
+                    ),
+                  ] else if (tournament.canRegister()) ...[
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -875,23 +1044,49 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
   }
 
   Future<void> _registerForTournament(Tournament tournament) async {
+    final l10n = AppLocalizations.of(context);
     try {
       await _tournamentService.registerForTournament(tournament.id);
       if (mounted) {
+        // Add tournament to registered list
+        setState(() {
+          _registeredTournamentIds.add(tournament.id);
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully registered for tournament!'),
+          SnackBar(
+            content: Text(l10n.translate('registration_success')),
             backgroundColor: Colors.green,
           ),
         );
-        _loadTournaments(); // Refresh list
+        _loadTournaments(); // Refresh list to get updated participant count
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage = e.toString();
+        
+        // Check for specific error types and show localized messages
+        if (errorMessage.toLowerCase().contains('already registered') || 
+            errorMessage.toLowerCase().contains('уже зарегистрирован') ||
+            errorMessage.toLowerCase().contains('eýýäm hasaba alyndy')) {
+          errorMessage = l10n.translate('already_registered_message');
+          // Add to registered list if backend confirms already registered
+          setState(() {
+            _registeredTournamentIds.add(tournament.id);
+          });
+        } else if (errorMessage.toLowerCase().contains('full') || 
+            errorMessage.toLowerCase().contains('spots') ||
+            errorMessage.toLowerCase().contains('no more') ||
+            errorMessage.toLowerCase().contains('заполнен') ||
+            errorMessage.toLowerCase().contains('doly')) {
+          errorMessage = l10n.translate('tournament_full_message');
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

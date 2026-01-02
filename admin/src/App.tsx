@@ -9,6 +9,7 @@ import CourtsPage from './pages/CourtsPage'
 import TariffsPage from './pages/TariffsPage'
 import TournamentsPage from './pages/TournamentsPage'
 import UsersPage from './pages/UsersPage'
+import BookingsPage from './pages/BookingsPage'
 import ReportsPage from './pages/ReportsPage'
 import NotificationsPage from './pages/NotificationsPage'
 import { useAuthStore } from './stores/authStore'
@@ -58,6 +59,7 @@ function App() {
           <Route path="tariffs" element={<TariffsPage />} />
           <Route path="tournaments" element={<TournamentsPage />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
