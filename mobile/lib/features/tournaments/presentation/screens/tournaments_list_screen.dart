@@ -75,10 +75,11 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tournaments'),
+        title: Text(l10n.translate('tournaments')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -105,7 +106,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _loadTournaments,
-                          child: const Text('Retry'),
+                          child: Text(l10n.translate('retry')),
                         ),
                       ],
                     ),
@@ -123,7 +124,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No tournaments available',
+                            l10n.translate('no_tournaments_available'),
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.grey[600],
@@ -131,7 +132,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Check back later for upcoming tournaments',
+                            l10n.translate('check_back_later'),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[500],
@@ -325,12 +326,17 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                     color: (tournament.isFull == true) ? Colors.red[600] : Colors.grey[600]
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '${tournament.participantCount}/${tournament.maxParticipants} participants',
-                    style: TextStyle(
-                      fontSize: 13, 
-                      color: (tournament.isFull == true) ? Colors.red[700] : Colors.grey[700],
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Text(
+                        '${tournament.participantCount}/${tournament.maxParticipants} ${l10n.translate('participants')}',
+                        style: TextStyle(
+                          fontSize: 13, 
+                          color: (tournament.isFull == true) ? Colors.red[700] : Colors.grey[700],
+                        ),
+                      );
+                    },
                   ),
                   if (tournament.isFull == true) ...[
                     const SizedBox(width: 8),
@@ -387,8 +393,11 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   children: [
                     Icon(Icons.attach_money, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 8),
-                    Text(
-                      'Registration Fee: ${tournament.registrationFee.toStringAsFixed(2)} TMT',
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Text(
+                          '${l10n.translate('registration_fee')}: ${tournament.registrationFee.toStringAsFixed(2)} TMT',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[700],
@@ -406,8 +415,11 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   children: [
                     Icon(Icons.timer, size: 16, color: Colors.orange[700]),
                     const SizedBox(width: 8),
-                    Text(
-                      'Register by: ${dateFormatter.format(tournament.registrationDeadline!)}',
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Text(
+                          '${l10n.translate('register_by')}: ${dateFormatter.format(tournament.registrationDeadline!)}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.orange[700],
@@ -424,16 +436,20 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                 children: [
                   // Details Button
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showTournamentDetails(tournament, locale),
-                      icon: const Icon(Icons.info_outline, size: 18),
-                      label: const Text('Details'),
+                    child: Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return OutlinedButton.icon(
+                          onPressed: () => _showTournamentDetails(tournament, locale),
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          label: Text(l10n.translate('details')),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   
@@ -442,34 +458,43 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _handleRegistration(tournament),
-                        icon: const Icon(Icons.how_to_reg, size: 18),
-                        label: const Text('Register'),
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return ElevatedButton.icon(
+                            onPressed: () => _handleRegistration(tournament),
+                            icon: const Icon(Icons.how_to_reg, size: 18),
+                            label: Text(l10n.translate('register')),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ] else if (_registeredTournamentIds.contains(tournament.id)) ...[
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: OutlinedButton.icon(
-                        onPressed: null, // Disabled
-                        icon: const Icon(Icons.check_circle, size: 18),
-                        label: const Text('Registered'),
+                      child: Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return OutlinedButton.icon(
+                            onPressed: null, // Disabled
+                            icon: const Icon(Icons.check_circle, size: 18),
+                            label: Text(l10n.translate('registered')),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           foregroundColor: Colors.blue,
-                          side: const BorderSide(color: Colors.blue),
-                        ),
+                            side: const BorderSide(color: Colors.blue),
+                          ),
+                        );
+                        },
                       ),
                     ),
                   ],
@@ -597,15 +622,20 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   ],
 
                   // Details
-                  _buildDetailRow('Start Date', fullDateFormatter.format(tournament.startDate), Icons.calendar_today),
-                  _buildDetailRow('End Date', fullDateFormatter.format(tournament.endDate), Icons.calendar_today),
+                  _buildDetailRow(l10n.translate('start_date'), fullDateFormatter.format(tournament.startDate), Icons.calendar_today),
+                  _buildDetailRow(l10n.translate('end_date'), fullDateFormatter.format(tournament.endDate), Icons.calendar_today),
                   if (tournament.registrationDeadline != null)
-                    _buildDetailRow('Registration Deadline', fullDateFormatter.format(tournament.registrationDeadline!), Icons.timer),
+                    _buildDetailRow(l10n.translate('registration_deadline'), fullDateFormatter.format(tournament.registrationDeadline!), Icons.timer),
                   if (tournament.city != null)
-                    _buildDetailRow('Location', '${tournament.city}${tournament.country != null ? ', ${tournament.country}' : ''}', Icons.location_on),
+                    _buildDetailRow(l10n.translate('location'), '${tournament.city}${tournament.country != null ? ', ${tournament.country}' : ''}', Icons.location_on),
                   if (tournament.organizerName != null)
-                    _buildDetailRow('Organizer', tournament.organizerName!, Icons.business),
-                  _buildDetailRow('Participants', '${tournament.participantCount}/${tournament.maxParticipants}', Icons.people),
+                    _buildDetailRow(l10n.translate('organizer'), tournament.organizerName!, Icons.business),
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return _buildDetailRow(l10n.translate('participants'), '${tournament.participantCount}/${tournament.maxParticipants}', Icons.people);
+                    },
+                  ),
                   if (tournament.isFull == true) ...[
                     const SizedBox(height: 12),
                     Container(
@@ -660,7 +690,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                     ),
                   ],
                   if (tournament.registrationFee > 0)
-                    _buildDetailRow('Registration Fee', '${tournament.registrationFee.toStringAsFixed(2)} TMT', Icons.attach_money),
+                    _buildDetailRow(l10n.translate('registration_fee'), '${tournament.registrationFee.toStringAsFixed(2)} TMT', Icons.attach_money),
                   
                   // External Registration Link
                   if (tournament.hasExternalRegistration())
@@ -681,9 +711,9 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'External Registration',
-                                    style: TextStyle(
+                                  Text(
+                                    l10n.translate('external_registration'),
+                                    style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.blue,
@@ -691,7 +721,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Registration is handled by external organizer',
+                                    l10n.translate('external_registration_description'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[700],
@@ -709,7 +739,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   if (tournament.categories != null && tournament.categories!.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Text(
-                      'Categories',
+                      l10n.translate('categories'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -729,7 +759,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                   if (tournament.rules != null && tournament.rules!.isNotEmpty) ...[
                     const SizedBox(height: 20),
                     Text(
-                      'Rules',
+                      l10n.translate('rules'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -769,8 +799,8 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                         },
                         icon: const Icon(Icons.how_to_reg),
                         label: Text(tournament.hasExternalRegistration() 
-                            ? 'Register (External Link)' 
-                            : 'Register for Tournament'),
+                            ? l10n.translate('register_external_link')
+                            : l10n.translate('register_for_tournament')),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -862,6 +892,8 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
       final plansWithFeature = await _subscriptionService.getPlansWithFeature('tournament_registration');
       
       if (!mounted) return;
+      
+      final l10n = AppLocalizations.of(context);
 
       showDialog(
         context: context,
@@ -870,22 +902,22 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
             children: [
               Icon(Icons.lock, color: Colors.orange[700]),
               const SizedBox(width: 12),
-              const Expanded(child: Text('Subscription Required')),
+              Expanded(child: Text(l10n.translate('subscription_required'))),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Tournament registration is not included in your current plan.',
-                style: TextStyle(fontSize: 15),
+              Text(
+                l10n.translate('tournament_registration_not_included'),
+                style: const TextStyle(fontSize: 15),
               ),
               const SizedBox(height: 16),
               if (plansWithFeature.isNotEmpty) ...[
-                const Text(
-                  'Available plans with tournament registration:',
-                  style: TextStyle(
+                Text(
+                  l10n.translate('available_plans_with_feature'),
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -936,23 +968,24 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.translate('cancel')),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/subscription');
               },
-              child: const Text('View Plans'),
+              child: Text(l10n.translate('view_plans')),
             ),
           ],
         ),
       );
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading subscription plans: $e'),
+            content: Text('${l10n.translate('error_loading_plans')}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -972,9 +1005,10 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
         );
       } else {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not open registration link: $url'),
+              content: Text('${l10n.translate('could_not_open_link')}: $url'),
               backgroundColor: Colors.red,
             ),
           );
@@ -982,9 +1016,10 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Invalid registration link: $e'),
+            content: Text('${l10n.translate('invalid_registration_link')}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -993,15 +1028,18 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
   }
 
   void _showRegistrationDialog(Tournament tournament) {
+    final l10n = AppLocalizations.of(context);
+    final locale = ref.read(localeProvider);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Register for Tournament'),
+        title: Text(l10n.translate('register_for_tournament')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Do you want to register for "${tournament.getName(ref.read(localeProvider))}"?'),
+            Text('${l10n.translate('register_for_tournament_question')} "${tournament.getName(locale)}"?'),
             if (tournament.registrationFee > 0) ...[
               const SizedBox(height: 16),
               Container(
@@ -1016,7 +1054,7 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Registration fee: ${tournament.registrationFee.toStringAsFixed(2)} TMT\nPayment details will be provided after registration.',
+                        '${l10n.translate('registration_fee')}: ${tournament.registrationFee.toStringAsFixed(2)} TMT\n${l10n.translate('payment_details_will_be_provided')}',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -1029,14 +1067,14 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.translate('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
               await _registerForTournament(tournament);
             },
-            child: const Text('Register'),
+            child: Text(l10n.translate('register')),
           ),
         ],
       ),

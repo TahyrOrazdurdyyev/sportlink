@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportlink/core/l10n/app_localizations.dart';
 
 class TournamentDetailScreen extends StatelessWidget {
   final String tournamentId;
@@ -7,9 +8,11 @@ class TournamentDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tournament Details'),
+        title: Text(l10n.translate('tournament_details')),
       ),
       body: Center(
         child: Text('Tournament Detail Screen: $tournamentId'),
