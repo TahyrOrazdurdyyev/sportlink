@@ -731,14 +731,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
     
     try {
       final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.updateUserProfile({
+      final updatedUser = await authRepo.updateUserProfile({
         'available_for_opponent_search': value,
       });
       
-      // Reload user data
-      await _loadUserData();
-      
+      // Update local state with the returned user data
       if (mounted) {
+        setState(() {
+          _currentUser = updatedUser;
+        });
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
