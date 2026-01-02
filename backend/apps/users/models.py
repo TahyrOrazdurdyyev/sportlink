@@ -15,11 +15,11 @@ class TimeSlot(EmbeddedDocument):
 
 class DayAvailability(EmbeddedDocument):
     """Availability for a specific day of the week"""
-    day = fields.StringField(
+    day_of_week = fields.StringField(
         required=True,
         choices=['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     )
-    is_available = fields.BooleanField(default=False)
+    is_available = fields.BooleanField(default=True)  # Default to True
     time_slots = fields.ListField(fields.EmbeddedDocumentField(TimeSlot), default=list)
 
 

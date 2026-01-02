@@ -205,8 +205,8 @@ class UserUpdateSerializer(MongoEngineModelSerializer):
                     time_slots.append(time_slot)
                 
                 day_availability = DayAvailability(
-                    day=day_data['day'],
-                    is_available=day_data.get('is_available', False),
+                    day_of_week=day_data['day_of_week'],  # Fixed: was 'day'
+                    is_available=day_data.get('is_available', True),  # Default to True
                     time_slots=time_slots
                 )
                 availability_objects.append(day_availability)
