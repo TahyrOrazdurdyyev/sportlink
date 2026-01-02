@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/l10n/app_localizations.dart';
+import 'core/l10n/turkmen_material_localizations.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/firebase_messaging_service.dart';
 import 'features/auth/presentation/screens/auth_screen.dart';
@@ -53,8 +54,9 @@ class SportlinkApp extends ConsumerWidget {
       
       // Localization support
       locale: locale,
-      localizationsDelegates: const [
+      localizationsDelegates: [
         AppLocalizations.delegate,
+        const TurkmenMaterialLocalizationsDelegate(), // Custom delegate for Turkmen support
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
