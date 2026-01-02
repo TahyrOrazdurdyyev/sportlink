@@ -45,7 +45,7 @@ class DayAvailability {
 
   factory DayAvailability.fromJson(Map<String, dynamic> json) {
     return DayAvailability(
-      day: json['day'] as String,
+      day: json['day_of_week'] as String,
       isAvailable: json['is_available'] as bool? ?? false,
       timeSlots: json['time_slots'] != null
           ? (json['time_slots'] as List)
@@ -57,7 +57,7 @@ class DayAvailability {
 
   Map<String, dynamic> toJson() {
     return {
-      'day': day,
+      'day_of_week': day,
       'is_available': isAvailable,
       'time_slots': timeSlots.map((slot) => slot.toJson()).toList(),
     };
