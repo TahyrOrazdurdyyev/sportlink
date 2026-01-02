@@ -57,6 +57,18 @@ class UserSerializer(MongoEngineModelSerializer):
         ]
         read_only_fields = ['id', 'rating', 'created_at', 'updated_at', 'subscription']
     
+    def to_representation(self, instance):
+        """Convert MongoDB numeric booleans to actual booleans"""
+        ret = super().to_representation(instance)
+        
+        # Convert boolean fields that MongoDB stores as numbers
+        boolean_fields = ['is_active', 'available_for_opponent_search']
+        for field in boolean_fields:
+            if field in ret and ret[field] is not None:
+                ret[field] = bool(ret[field])
+        
+        return ret
+    
     def get_subscription(self, obj):
         """Get user's active subscription"""
         from apps.subscriptions.models_user import UserSubscription
