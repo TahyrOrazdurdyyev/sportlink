@@ -57,7 +57,7 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
 
     try {
       final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.updateUserProfile({
+      final updatedUser = await authRepo.updateUserProfile({
         'availability_schedule': _schedule.map((day) => day.toJson()).toList(),
       });
 
@@ -68,7 +68,7 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate changes were saved
+        Navigator.pop(context, updatedUser); // Return updated user model
       }
     } catch (e) {
       if (mounted) {

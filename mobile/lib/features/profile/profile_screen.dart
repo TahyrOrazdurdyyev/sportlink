@@ -703,13 +703,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
                 TextButton.icon(
                   onPressed: () async {
                     if (_currentUser != null) {
-                      final result = await Navigator.of(context).push(
+                      final updatedUser = await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => AvailabilityScheduleScreen(user: _currentUser!),
                         ),
                       );
-                      if (result == true) {
-                        _loadUserData(); // Reload user data after schedule update
+                      if (updatedUser != null) {
+                        // Update local state with the returned user data
+                        setState(() {
+                          _currentUser = updatedUser;
+                        });
                       }
                     }
                   },
