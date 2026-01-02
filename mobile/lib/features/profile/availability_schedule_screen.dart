@@ -62,9 +62,10 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
       });
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Schedule saved successfully'),
+          SnackBar(
+            content: Text(l10n.translate('schedule_saved')),
             backgroundColor: Colors.green,
           ),
         );
@@ -72,9 +73,10 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save schedule: ${e.toString()}'),
+            content: Text('${l10n.translate('error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -204,16 +206,21 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
               const Divider(),
               const SizedBox(height: 8),
               if (dayAvailability.timeSlots.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Available all day',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context);
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        l10n.translate('available_all_day'),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    );
+                  },
                 )
               else
                 ...dayAvailability.timeSlots.asMap().entries.map((entry) {
@@ -222,13 +229,18 @@ class _AvailabilityScheduleScreenState extends ConsumerState<AvailabilitySchedul
                   return _buildTimeSlotItem(index, slotIndex, slot);
                 }).toList(),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => _addTimeSlot(index),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Time Slot'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return OutlinedButton.icon(
+                    onPressed: () => _addTimeSlot(index),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(l10n.translate('add_time_slot')),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  );
+                },
               ),
             ],
           ],
@@ -328,17 +340,19 @@ class _TimeSlotDialogState extends State<_TimeSlotDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return AlertDialog(
-      title: const Text('Edit Time Slot'),
+      title: Text(l10n.translate('edit_time_slot')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: _startController,
-            decoration: const InputDecoration(
-              labelText: 'Start Time',
+            decoration: InputDecoration(
+              labelText: l10n.translate('start_time'),
               hintText: 'HH:MM',
-              suffixIcon: Icon(Icons.access_time),
+              suffixIcon: const Icon(Icons.access_time),
             ),
             readOnly: true,
             onTap: () => _pickTime(_startController),
@@ -346,10 +360,10 @@ class _TimeSlotDialogState extends State<_TimeSlotDialog> {
           const SizedBox(height: 16),
           TextField(
             controller: _endController,
-            decoration: const InputDecoration(
-              labelText: 'End Time',
+            decoration: InputDecoration(
+              labelText: l10n.translate('end_time'),
               hintText: 'HH:MM',
-              suffixIcon: Icon(Icons.access_time),
+              suffixIcon: const Icon(Icons.access_time),
             ),
             readOnly: true,
             onTap: () => _pickTime(_endController),
@@ -359,7 +373,7 @@ class _TimeSlotDialogState extends State<_TimeSlotDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(l10n.translate('cancel')),
         ),
         ElevatedButton(
           onPressed: () {
@@ -368,7 +382,7 @@ class _TimeSlotDialogState extends State<_TimeSlotDialog> {
               'endTime': _endController.text,
             });
           },
-          child: const Text('Save'),
+          child: Text(l10n.translate('save')),
         ),
       ],
     );
