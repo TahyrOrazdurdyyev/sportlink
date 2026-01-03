@@ -41,14 +41,71 @@ def list_bookings(request):
         
         # Serialize
         bookings_data = []
+        from apps.courts.models import Court
+        from apps.users.models import User
+        from mongoengine.errors import DoesNotExist
+        from uuid import UUID
+        
         for booking in bookings:
+            # Safely get court info (handle DBRef errors)
+            court_id = None
+            court_name = None
+            try:
+                # Try to get court ID from raw MongoDB data without dereferencing
+                booking_mongo = booking.to_mongo().to_dict()
+                court_ref = booking_mongo.get('court')
+                if court_ref:
+                    if isinstance(court_ref, UUID):
+                        court_id = str(court_ref)
+                    elif hasattr(court_ref, 'id'):
+                        court_id = str(court_ref.id)
+                    elif isinstance(court_ref, dict) and '$ref' in court_ref:
+                        court_id = str(court_ref.get('id', ''))
+                
+                # Try to get court object if ID is available
+                if court_id:
+                    try:
+                        court = Court.objects.get(id=court_id)
+                        court_name = court.name_i18n
+                    except (DoesNotExist, Exception):
+                        court_name = {'en': 'Court deleted', 'ru': 'Корт удалён', 'tk': 'Meýdança öçürildi'}
+            except Exception as e:
+                court_name = {'en': 'Court unavailable', 'ru': 'Корт недоступен', 'tk': 'Meýdança elýeterli däl'}
+            
+            # Safely get user info (handle DBRef errors)
+            user_id = None
+            user_phone = None
+            user_name = None
+            try:
+                # Try to get user ID from raw MongoDB data without dereferencing
+                booking_mongo = booking.to_mongo().to_dict()
+                user_ref = booking_mongo.get('user')
+                if user_ref:
+                    if isinstance(user_ref, UUID):
+                        user_id = str(user_ref)
+                    elif hasattr(user_ref, 'id'):
+                        user_id = str(user_ref.id)
+                    elif isinstance(user_ref, dict) and '$ref' in user_ref:
+                        user_id = str(user_ref.get('id', ''))
+                
+                # Try to get user object if ID is available
+                if user_id:
+                    try:
+                        user = User.objects.get(id=user_id)
+                        user_phone = user.phone
+                        user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or None
+                    except (DoesNotExist, Exception):
+                        user_name = 'User deleted'
+            except Exception as e:
+                user_name = 'User unavailable'
+            
             booking_dict = {
                 'id': str(booking.id),
-                'court_id': str(booking.court.id) if booking.court else None,
-                'court_name': booking.court.name_i18n if booking.court else None,
-                'user_id': str(booking.user.id) if booking.user else None,
-                'user_phone': booking.user.phone if booking.user else None,
-                'user_name': f"{booking.user.first_name or ''} {booking.user.last_name or ''}".strip() if booking.user else None,
+                'court_id': court_id,
+                'court_name': court_name,
+                'user_id': user_id,
+                'user_phone': user_phone,
+                'user_name': user_name,
                 'start_time': booking.start_time.isoformat() if booking.start_time else None,
                 'end_time': booking.end_time.isoformat() if booking.end_time else None,
                 'duration_hours': (booking.end_time - booking.start_time).total_seconds() / 3600 if booking.start_time and booking.end_time else 0,

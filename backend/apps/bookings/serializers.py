@@ -120,7 +120,35 @@ class BookingListSerializer(MongoEngineModelSerializer):
         ]
     
     def get_court_name(self, obj):
-        """Get court name in default language"""
-        if obj.court and obj.court.name_i18n:
-            return obj.court.get_name()
+        """Get court name in default language (safely handle DBRef errors)"""
+        try:
+            # Try to access court normally
+            if obj.court and obj.court.name_i18n:
+                return obj.court.get_name()
+        except Exception:
+            # If DBRef error, try to get court ID from raw MongoDB data
+            try:
+                from apps.courts.models import Court
+                from mongoengine.errors import DoesNotExist
+                from uuid import UUID
+                
+                booking_mongo = obj.to_mongo().to_dict()
+                court_ref = booking_mongo.get('court')
+                if court_ref:
+                    court_id = None
+                    if isinstance(court_ref, UUID):
+                        court_id = court_ref
+                    elif hasattr(court_ref, 'id'):
+                        court_id = court_ref.id
+                    elif isinstance(court_ref, dict) and '$ref' in court_ref:
+                        court_id = court_ref.get('id')
+                    
+                    if court_id:
+                        try:
+                            court = Court.objects.get(id=court_id)
+                            return court.get_name()
+                        except (DoesNotExist, Exception):
+                            return "Court deleted"
+            except Exception:
+                pass
         return ""
