@@ -583,7 +583,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with AutomaticKee
             Builder(
               builder: (context) {
                 final locale = ref.watch(localeProvider);
-                final features = subscription.getLocalizedFeaturesList(locale.languageCode).take(3);
+                final features = subscription.getLocalizedFeaturesList(locale.languageCode);
                 return Column(
                   children: features.map((feature) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
