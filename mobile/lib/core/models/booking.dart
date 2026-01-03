@@ -64,10 +64,30 @@ class Booking {
       return null;
     }
     
+    // Safely extract user ID
+    String? userId;
+    if (json['user'] != null) {
+      if (json['user'] is String) {
+        userId = json['user'] as String;
+      } else if (json['user'] is Map && json['user']['id'] != null) {
+        userId = json['user']['id'] as String;
+      }
+    }
+    
+    // Safely extract court ID
+    String? courtId;
+    if (json['court'] != null) {
+      if (json['court'] is String) {
+        courtId = json['court'] as String;
+      } else if (json['court'] is Map && json['court']['id'] != null) {
+        courtId = json['court']['id'] as String;
+      }
+    }
+    
     return Booking(
       id: json['id'] as String,
-      userId: json['user'] is String ? json['user'] as String : (json['user']['id'] as String),
-      courtId: json['court'] is String ? json['court'] as String : (json['court']['id'] as String),
+      userId: userId ?? '',
+      courtId: courtId ?? '',
       startTime: DateTime.parse(json['start_time'] as String),
       endTime: DateTime.parse(json['end_time'] as String),
       status: json['status'] as String,
