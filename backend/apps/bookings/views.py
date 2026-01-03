@@ -1,6 +1,7 @@
 """
 Booking views for MongoDB
 """
+import logging
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +17,8 @@ from apps.courts.models import Court
 from datetime import datetime
 from dateutil import parser
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class BookingViewSet(MongoEngineModelViewSet):
@@ -158,6 +161,8 @@ class BookingViewSet(MongoEngineModelViewSet):
         except Exception as e:
             import traceback
             error_trace = traceback.format_exc()
+            logger.error(f"Error creating booking: {e}")
+            logger.error(f"Traceback: {error_trace}")
             print(f"Error creating booking: {e}")
             print(f"Traceback: {error_trace}")
             return Response({

@@ -1,6 +1,7 @@
 """
 Booking validation utilities
 """
+import uuid
 from datetime import datetime, timedelta
 from apps.subscriptions.models_user import UserSubscription
 from apps.bookings.models import Booking
@@ -18,6 +19,34 @@ class BookingValidator:
         self.day_of_week = start_time.isoweekday()
         self.errors = []
         self.warnings = []
+    
+    def _get_plan_id_safely(self):
+        """Safely extract plan_id from subscription without dereferencing DBRef"""
+        if not self.subscription:
+            return None
+        
+        try:
+            # Try direct access first
+            plan_ref = self.subscription.plan
+            if hasattr(plan_ref, 'id'):
+                return plan_ref.id
+            elif isinstance(plan_ref, (str, uuid.UUID)):
+                return plan_ref
+        except Exception:
+            # If direct access fails, try raw MongoDB data
+            pass
+        
+        try:
+            raw_data = self.subscription.to_mongo().to_dict()
+            plan_ref = raw_data.get('plan')
+            if isinstance(plan_ref, dict) and '$id' in plan_ref:
+                return plan_ref['$id']
+            elif isinstance(plan_ref, (str, uuid.UUID)):
+                return plan_ref
+        except Exception:
+            pass
+        
+        return None
         
     def validate(self):
         """Run all validation checks"""
@@ -116,12 +145,28 @@ class BookingValidator:
         
         # Get plan object (handle dbref=False)
         try:
-            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan_id = self._get_plan_id_safely()
+            if not plan_id:
+                self.errors.append({
+                    'code': 'PLAN_NOT_FOUND',
+                    'message': 'Subscription plan ID not found',
+                    'field': 'subscription'
+                })
+                return
+            
             plan = SubscriptionPlan.objects.get(id=plan_id)
         except SubscriptionPlan.DoesNotExist:
             self.errors.append({
                 'code': 'PLAN_NOT_FOUND',
                 'message': 'Subscription plan not found',
+                'field': 'subscription'
+            })
+            return
+        except Exception as e:
+            # Handle DBRef errors
+            self.errors.append({
+                'code': 'PLAN_ACCESS_ERROR',
+                'message': f'Cannot access subscription plan: {str(e)}',
                 'field': 'subscription'
             })
             return
@@ -139,9 +184,14 @@ class BookingValidator:
         
         # Get plan object (handle dbref=False)
         try:
-            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan_id = self._get_plan_id_safely()
+            if not plan_id:
+                return
             plan = SubscriptionPlan.objects.get(id=plan_id)
         except SubscriptionPlan.DoesNotExist:
+            return
+        except Exception:
+            # Handle DBRef errors silently
             return
         
         booking_limits = plan.booking_limits or {}
@@ -165,9 +215,14 @@ class BookingValidator:
         
         # Get plan object (handle dbref=False)
         try:
-            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan_id = self._get_plan_id_safely()
+            if not plan_id:
+                return
             plan = SubscriptionPlan.objects.get(id=plan_id)
         except SubscriptionPlan.DoesNotExist:
+            return
+        except Exception:
+            # Handle DBRef errors silently
             return
         
         booking_limits = plan.booking_limits or {}
@@ -188,9 +243,14 @@ class BookingValidator:
         
         # Get plan object (handle dbref=False)
         try:
-            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan_id = self._get_plan_id_safely()
+            if not plan_id:
+                return
             plan = SubscriptionPlan.objects.get(id=plan_id)
         except SubscriptionPlan.DoesNotExist:
+            return
+        except Exception:
+            # Handle DBRef errors silently
             return
         
         booking_limits = plan.booking_limits or {}
@@ -278,9 +338,14 @@ class BookingValidator:
         
         # Get plan object (handle dbref=False)
         try:
-            plan_id = self.subscription.plan.id if hasattr(self.subscription.plan, 'id') else self.subscription.plan
+            plan_id = self._get_plan_id_safely()
+            if not plan_id:
+                return None
             plan = SubscriptionPlan.objects.get(id=plan_id)
         except SubscriptionPlan.DoesNotExist:
+            return None
+        except Exception:
+            # Handle DBRef errors
             return None
         
         booking_limits = plan.booking_limits or {}

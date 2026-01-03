@@ -87,6 +87,22 @@ class BookingCreateSerializer(MongoEngineModelSerializer):
         if request and request.user:
             validated_data['user'] = request.user
         
+        # Convert court UUID string to Court object if needed
+        if 'court' in validated_data:
+            court_value = validated_data['court']
+            if isinstance(court_value, str):
+                # If court is a string UUID, convert to Court object
+                try:
+                    from apps.courts.models import Court
+                    import uuid
+                    court_id = uuid.UUID(court_value)
+                    court = Court.objects.get(id=court_id)
+                    validated_data['court'] = court
+                except (ValueError, Court.DoesNotExist) as e:
+                    raise serializers.ValidationError({
+                        'court': f'Invalid court ID: {str(e)}'
+                    })
+        
         return super().create(validated_data)
 
 
