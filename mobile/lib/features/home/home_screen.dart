@@ -36,6 +36,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reset bottom nav index to Home when returning to this screen
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      // Check if we're coming back from another screen
+      if (_currentBottomNavIndex != 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _currentBottomNavIndex = 0;
+            });
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
@@ -205,10 +223,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const TournamentsListScreen()),
-            );
+            ).then((_) {
+              // Reset to Home when returning from Tournaments
+              if (mounted) {
+                setState(() {
+                  _currentBottomNavIndex = 0;
+                });
+              }
+            });
           } else if (index == 3) {
             // Navigate to Profile
-            Navigator.pushNamed(context, '/profile');
+            Navigator.pushNamed(context, '/profile').then((_) {
+              // Reset to Home when returning from Profile
+              if (mounted) {
+                setState(() {
+                  _currentBottomNavIndex = 0;
+                });
+              }
+            });
           }
         },
       ),
