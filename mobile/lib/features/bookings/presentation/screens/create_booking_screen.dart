@@ -104,11 +104,11 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
   }
 
   Future<void> _createBooking() async {
+    final l10n = AppLocalizations.of(context);
     final startDateTime = _combineDateAndTime(_selectedDate, _startTime);
     final endDateTime = _combineDateAndTime(_selectedDate, _endTime);
 
     if (endDateTime.isBefore(startDateTime) || endDateTime.isAtSameMomentAs(startDateTime)) {
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.translate('end_time_must_be_after_start'))),
       );
@@ -116,7 +116,6 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
     }
 
     if (_isAvailable == false) {
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.translate('selected_time_not_available'))),
       );
@@ -125,7 +124,6 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
 
     // Validate opponents logic
     if (_findOpponents && _opponentsNeeded <= 0) {
-      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.translate('please_specify_opponents_needed'))),
       );
@@ -137,7 +135,6 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
     if (_equipmentNeeded) {
       // Only validate if court has available equipment
       if (widget.court.getAvailableEquipment().isEmpty) {
-        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.translate('no_equipment_available'))),
         );
@@ -156,7 +153,6 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
       }
       
       if (!hasEquipment) {
-        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.translate('please_specify_equipment'))),
         );

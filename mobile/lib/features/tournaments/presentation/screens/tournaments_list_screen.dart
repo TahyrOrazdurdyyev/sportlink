@@ -398,11 +398,13 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                         final l10n = AppLocalizations.of(context);
                         return Text(
                           '${l10n.translate('registration_fee')}: ${tournament.registrationFee.toStringAsFixed(2)} TMT',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -420,11 +422,13 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                         final l10n = AppLocalizations.of(context);
                         return Text(
                           '${l10n.translate('register_by')}: ${dateFormatter.format(tournament.registrationDeadline!)}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.orange[700],
-                        fontWeight: FontWeight.w500,
-                      ),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.orange[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -443,10 +447,11 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                           onPressed: () => _showTournamentDetails(tournament, locale),
                           icon: const Icon(Icons.info_outline, size: 18),
                           label: Text(l10n.translate('details')),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         );
                       },
@@ -465,10 +470,11 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                             onPressed: () => _handleRegistration(tournament),
                             icon: const Icon(Icons.how_to_reg, size: 18),
                             label: Text(l10n.translate('register')),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
                           );
                         },
@@ -485,15 +491,15 @@ class _TournamentsListScreenState extends ConsumerState<TournamentsListScreen> {
                             onPressed: null, // Disabled
                             icon: const Icon(Icons.check_circle, size: 18),
                             label: Text(l10n.translate('registered')),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          foregroundColor: Colors.blue,
-                            side: const BorderSide(color: Colors.blue),
-                          ),
-                        );
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              foregroundColor: Colors.blue,
+                              side: const BorderSide(color: Colors.blue),
+                            ),
+                          );
                         },
                       ),
                     ),
