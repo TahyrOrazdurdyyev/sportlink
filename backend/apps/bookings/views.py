@@ -74,9 +74,38 @@ class BookingViewSet(MongoEngineModelViewSet):
             # Validate subscription and tariff limits
             validator = BookingValidator(request.user, court, start_time, end_time)
             if not validator.validate():
+                validation_result = validator.get_validation_result()
+                # Get first error message for user-friendly response
+                error_message = 'Booking validation failed'
+                if validator.errors:
+                    first_error = validator.errors[0]
+                    error_code = first_error.get('code', '')
+                    error_msg = first_error.get('message', '')
+                    
+                    # Map error codes to user-friendly messages
+                    if error_code == 'PLAN_NOT_FOUND':
+                        error_message = 'Your subscription plan could not be found. Please contact support.'
+                    elif error_code == 'PLAN_ACCESS_ERROR':
+                        error_message = 'Cannot access subscription information. Please contact support.'
+                    elif error_code == 'FEATURE_NOT_AVAILABLE':
+                        error_message = 'Your subscription does not include court booking. Please upgrade your plan.'
+                    elif error_code == 'DAY_NOT_ALLOWED':
+                        error_message = error_msg or 'Booking is not allowed on this day with your current plan.'
+                    elif error_code == 'DURATION_EXCEEDS_LIMIT':
+                        error_message = error_msg or 'Booking duration exceeds your plan limit.'
+                    elif error_code == 'WEEKLY_LIMIT_REACHED':
+                        error_message = error_msg or 'You have reached your weekly booking limit.'
+                    elif error_code == 'TIME_SLOT_OCCUPIED':
+                        error_message = error_msg or 'This time slot is already booked.'
+                    elif error_code == 'COURT_NOT_AVAILABLE':
+                        error_message = error_msg or 'Court is not available at this time.'
+                    else:
+                        error_message = error_msg or error_message
+                
+                logger.warning(f"Booking validation failed for user {request.user.id}: {validation_result}")
                 return Response({
-                    'error': 'Booking validation failed',
-                    'validation': validator.get_validation_result()
+                    'error': error_message,
+                    'validation': validation_result
                 }, status=status.HTTP_403_FORBIDDEN)
             
             # Check equipment rental feature

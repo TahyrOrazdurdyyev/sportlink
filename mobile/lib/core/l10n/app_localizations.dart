@@ -142,6 +142,7 @@ class AppLocalizations {
       'duration_exceeds_limit': 'Booking duration exceeds your plan limit.',
       'day_not_allowed': 'Your plan does not allow bookings on this day.',
       'equipment_rental_not_included': 'Your plan does not include equipment rental.',
+      'subscription_does_not_include_court_booking': 'Your subscription does not include court booking. Please upgrade your plan.',
       
       // Players & Opponents
       'number_of_players': 'Number of Players',

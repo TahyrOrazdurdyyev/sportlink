@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/models/court.dart';
 import '../../../../core/services/booking_service.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -196,26 +197,81 @@ class _CreateBookingScreenState extends ConsumerState<CreateBookingScreen> {
         );
         Navigator.of(context).pop(true); // Return true to indicate success
       }
-    } catch (e) {
+    } on DioException catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         
         // Parse error message for better user feedback
-        String errorMessage = e.toString();
-        if (errorMessage.contains('WEEKLY_LIMIT_REACHED')) {
-          errorMessage = l10n.translate('weekly_limit_reached');
-        } else if (errorMessage.contains('DURATION_EXCEEDS_LIMIT')) {
-          errorMessage = l10n.translate('duration_exceeds_limit');
-        } else if (errorMessage.contains('DAY_NOT_ALLOWED')) {
-          errorMessage = l10n.translate('day_not_allowed');
-        } else if (errorMessage.contains('equipment_rental')) {
-          errorMessage = l10n.translate('equipment_rental_not_included');
+        String errorMessage = 'Failed to create booking';
+        
+        // Try to get error from response
+        if (e.response?.data != null) {
+          final responseData = e.response!.data;
+          if (responseData is Map) {
+            errorMessage = responseData['error'] as String? ?? 
+                          responseData['detail'] as String? ?? 
+                          errorMessage;
+            
+            // Check validation errors
+            if (responseData.containsKey('validation')) {
+              final validation = responseData['validation'] as Map?;
+              if (validation != null && validation.containsKey('errors')) {
+                final errors = validation['errors'] as List?;
+                if (errors != null && errors.isNotEmpty) {
+                  final firstError = errors[0] as Map?;
+                  if (firstError != null) {
+                    final code = firstError['code'] as String? ?? '';
+                    final msg = firstError['message'] as String? ?? '';
+                    
+                    // Map error codes to localized messages
+                    if (code == 'WEEKLY_LIMIT_REACHED') {
+                      errorMessage = l10n.translate('weekly_limit_reached');
+                    } else if (code == 'DURATION_EXCEEDS_LIMIT') {
+                      errorMessage = l10n.translate('duration_exceeds_limit');
+                    } else if (code == 'DAY_NOT_ALLOWED') {
+                      errorMessage = l10n.translate('day_not_allowed');
+                    } else if (code == 'FEATURE_NOT_AVAILABLE') {
+                      errorMessage = l10n.translate('subscription_does_not_include_court_booking');
+                    } else if (code == 'TIME_SLOT_OCCUPIED' || code == 'COURT_NOT_AVAILABLE') {
+                      errorMessage = l10n.translate('time_slot_not_available');
+                    } else if (msg.isNotEmpty) {
+                      errorMessage = msg;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        // Fallback to checking error message string
+        if (errorMessage == 'Failed to create booking') {
+          final errorStr = e.toString();
+          if (errorStr.contains('WEEKLY_LIMIT_REACHED')) {
+            errorMessage = l10n.translate('weekly_limit_reached');
+          } else if (errorStr.contains('DURATION_EXCEEDS_LIMIT')) {
+            errorMessage = l10n.translate('duration_exceeds_limit');
+          } else if (errorStr.contains('DAY_NOT_ALLOWED')) {
+            errorMessage = l10n.translate('day_not_allowed');
+          } else if (errorStr.contains('equipment_rental')) {
+            errorMessage = l10n.translate('equipment_rental_not_included');
+          }
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${l10n.translate('error')}: ${e.toString()}')),
         );
       }
     }
