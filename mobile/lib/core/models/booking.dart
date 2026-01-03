@@ -46,6 +46,24 @@ class Booking {
   });
   
   factory Booking.fromJson(Map<String, dynamic> json) {
+    // Helper to safely convert to int
+    int? _toInt(dynamic value) {
+      if (value == null) return null;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+    
+    // Helper to safely convert to bool
+    bool? _toBool(dynamic value) {
+      if (value == null) return null;
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      if (value is String) return value.toLowerCase() == 'true' || value == '1';
+      return null;
+    }
+    
     return Booking(
       id: json['id'] as String,
       userId: json['user'] is String ? json['user'] as String : (json['user']['id'] as String),
@@ -53,12 +71,16 @@ class Booking {
       startTime: DateTime.parse(json['start_time'] as String),
       endTime: DateTime.parse(json['end_time'] as String),
       status: json['status'] as String,
-      numberOfPlayers: (json['number_of_players'] as int?) ?? 1,
-      findOpponents: (json['find_opponents'] as bool?) ?? false,
-      opponentsNeeded: (json['opponents_needed'] as int?) ?? 0,
-      equipmentNeeded: (json['equipment_needed'] as bool?) ?? false,
+      numberOfPlayers: _toInt(json['number_of_players']) ?? 1,
+      findOpponents: _toBool(json['find_opponents']) ?? false,
+      opponentsNeeded: _toInt(json['opponents_needed']) ?? 0,
+      equipmentNeeded: _toBool(json['equipment_needed']) ?? false,
       equipmentDetails: json['equipment_details'] != null 
-          ? Map<String, int>.from(json['equipment_details'] as Map)
+          ? Map<String, int>.from(
+              (json['equipment_details'] as Map).map((key, value) => 
+                MapEntry(key as String, _toInt(value) ?? 0)
+              )
+            )
           : null,
       totalPrice: json['total_price'] != null ? double.parse(json['total_price'].toString()) : null,
       paymentMethod: json['payment_method'] as String?,
