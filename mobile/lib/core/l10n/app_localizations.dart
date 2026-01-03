@@ -756,6 +756,7 @@ class AppLocalizations {
       'duration_exceeds_limit': 'Bronlaş dowamlylygy meýilnama çägiňizden geçýär.',
       'day_not_allowed': 'Meýilnamaňyz bu günde bronlaşmaga rugsat bermeýär.',
       'equipment_rental_not_included': 'Meýilnamaňyz enjam kärendesini öz içine almaz.',
+      'subscription_does_not_include_court_booking': 'Meýilnamaňyz meýdança bronlaşmagy öz içine almaýar. Meýilnamany täzeleň.',
       
       // Players & Opponents
       'number_of_players': 'Oýunçylaryň sany',
