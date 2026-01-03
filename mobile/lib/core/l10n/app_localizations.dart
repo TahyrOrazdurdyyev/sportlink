@@ -449,6 +449,7 @@ class AppLocalizations {
       'duration_exceeds_limit': 'Длительность бронирования превышает лимит вашего плана.',
       'day_not_allowed': 'Ваш план не позволяет бронировать в этот день.',
       'equipment_rental_not_included': 'Ваш план не включает аренду экипировки.',
+      'subscription_does_not_include_court_booking': 'Ваш тарифный план не включает бронирование кортов. Пожалуйста, обновите план.',
       
       // Players & Opponents
       'number_of_players': 'Количество игроков',
