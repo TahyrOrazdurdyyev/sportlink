@@ -15,6 +15,7 @@ from apps.bookings.validators import BookingValidator, check_time_slot_conflict
 from apps.courts.models import Court
 from datetime import datetime
 from dateutil import parser
+from django.conf import settings
 
 
 class BookingViewSet(MongoEngineModelViewSet):
@@ -34,107 +35,136 @@ class BookingViewSet(MongoEngineModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """Create booking with conflict check and tariff validation"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        court_id = request.data.get('court')
-        start_time = parser.parse(request.data.get('start_time'))
-        end_time = parser.parse(request.data.get('end_time'))
-        equipment_needed = request.data.get('equipment_needed', False)
-        
-        # Get court
         try:
-            from apps.courts.models import Court
-            court = Court.objects.get(id=court_id)
-        except Court.DoesNotExist:
-            return Response({
-                'error': 'Court not found'
-            }, status=status.HTTP_404_NOT_FOUND)
-        
-        # Validate subscription and tariff limits
-        validator = BookingValidator(request.user, court, start_time, end_time)
-        if not validator.validate():
-            return Response({
-                'error': 'Booking validation failed',
-                'validation': validator.get_validation_result()
-            }, status=status.HTTP_403_FORBIDDEN)
-        
-        # Check equipment rental feature
-        if equipment_needed:
-            from apps.subscriptions.models import SubscriptionPlan
+            serializer = self.get_serializer(data=request.data, context={'request': request})
+            serializer.is_valid(raise_exception=True)
             
-            if not validator.subscription:
+            court_id = request.data.get('court')
+            start_time_str = request.data.get('start_time')
+            end_time_str = request.data.get('end_time')
+            equipment_needed = request.data.get('equipment_needed', False)
+            
+            if not court_id or not start_time_str or not end_time_str:
                 return Response({
-                    'error': 'No active subscription',
-                    'detail': 'You need an active subscription to rent equipment'
-                }, status=status.HTTP_403_FORBIDDEN)
+                    'error': 'Missing required fields',
+                    'required': ['court', 'start_time', 'end_time']
+                }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Get plan object (handle dbref=False)
             try:
-                plan_id = validator.subscription.plan.id if hasattr(validator.subscription.plan, 'id') else validator.subscription.plan
-                plan = SubscriptionPlan.objects.get(id=plan_id)
-            except SubscriptionPlan.DoesNotExist:
+                start_time = parser.parse(start_time_str)
+                end_time = parser.parse(end_time_str)
+            except Exception as e:
                 return Response({
-                    'error': 'Subscription plan not found',
-                    'detail': 'Your subscription plan could not be found'
+                    'error': 'Invalid date format',
+                    'detail': str(e)
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get court
+            try:
+                from apps.courts.models import Court
+                court = Court.objects.get(id=court_id)
+            except Court.DoesNotExist:
+                return Response({
+                    'error': 'Court not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Validate subscription and tariff limits
+            validator = BookingValidator(request.user, court, start_time, end_time)
+            if not validator.validate():
+                return Response({
+                    'error': 'Booking validation failed',
+                    'validation': validator.get_validation_result()
                 }, status=status.HTTP_403_FORBIDDEN)
             
-            if not plan.features.get('equipment_rental', False):
+            # Check equipment rental feature
+            if equipment_needed:
+                from apps.subscriptions.models import SubscriptionPlan
+                
+                if not validator.subscription:
+                    return Response({
+                        'error': 'No active subscription',
+                        'detail': 'You need an active subscription to rent equipment'
+                    }, status=status.HTTP_403_FORBIDDEN)
+                
+                # Get plan object (handle dbref=False)
+                try:
+                    plan_id = validator.subscription.plan.id if hasattr(validator.subscription.plan, 'id') else validator.subscription.plan
+                    plan = SubscriptionPlan.objects.get(id=plan_id)
+                except SubscriptionPlan.DoesNotExist:
+                    return Response({
+                        'error': 'Subscription plan not found',
+                        'detail': 'Your subscription plan could not be found'
+                    }, status=status.HTTP_403_FORBIDDEN)
+                
+                if not plan.features.get('equipment_rental', False):
+                    return Response({
+                        'error': 'Equipment rental not available',
+                        'detail': 'Your subscription plan does not include equipment rental',
+                        'feature': 'equipment_rental'
+                    }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Check for time slot conflicts
+            conflict_check = check_time_slot_conflict(court, start_time, end_time)
+            if conflict_check['has_conflict']:
                 return Response({
-                    'error': 'Equipment rental not available',
-                    'detail': 'Your subscription plan does not include equipment rental',
-                    'feature': 'equipment_rental'
-                }, status=status.HTTP_403_FORBIDDEN)
-        
-        # Check for time slot conflicts
-        try:
-            court = Court.objects.get(id=court_id)
-        except Court.DoesNotExist:
-            return Response({'error': 'Court not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        conflict_check = check_time_slot_conflict(court, start_time, end_time)
-        if conflict_check['has_conflict']:
+                    'error': 'Time slot already booked',
+                    'detail': 'This court is already booked for the selected time',
+                    'conflicts': conflict_check['conflicts']
+                }, status=status.HTTP_409_CONFLICT)
+            
+            # Create booking
+            booking = serializer.save(user=request.user)
+            
+            # Try to auto-match opponents if requested
+            matches = []
+            if booking.find_opponents and booking.opponents_needed > 0:
+                try:
+                    from apps.bookings.matching import auto_match_opponents
+                    from apps.notifications.services import notify_opponent_matched, notify_seeker_matched
+                    
+                    matches = auto_match_opponents(booking)
+                    
+                    # Send notifications for each match
+                    for match in matches:
+                        try:
+                            # Notify the opponent
+                            notify_opponent_matched(booking, match.opponent)
+                            # Notify the seeker
+                            notify_seeker_matched(booking, match.opponent)
+                        except Exception as e:
+                            print(f"Error sending notification: {e}")
+                            # Continue even if notification fails
+                except Exception as e:
+                    print(f"Error matching opponents: {e}")
+                    # Continue even if matching fails
+            
+            response_data = BookingSerializer(booking).data
+            if matches:
+                response_data['matches_found'] = len(matches)
+                response_data['matched_opponents'] = [
+                    {
+                        'id': str(match.opponent.id),
+                        'nickname': match.opponent.nickname,
+                        'first_name': match.opponent.first_name,
+                        'last_name': match.opponent.last_name,
+                    }
+                    for match in matches
+                ]
+            
+            return Response(
+                response_data,
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            print(f"Error creating booking: {e}")
+            print(f"Traceback: {error_trace}")
             return Response({
-                'error': 'Time slot already booked',
-                'detail': 'This court is already booked for the selected time',
-                'conflicts': conflict_check['conflicts']
-            }, status=status.HTTP_409_CONFLICT)
-        
-        # Create booking
-        booking = serializer.save(user=request.user)
-        
-        # Try to auto-match opponents if requested
-        matches = []
-        if booking.find_opponents and booking.opponents_needed > 0:
-            from apps.bookings.matching import auto_match_opponents
-            from apps.notifications.services import notify_opponent_matched, notify_seeker_matched
-            
-            matches = auto_match_opponents(booking)
-            
-            # Send notifications for each match
-            for match in matches:
-                # Notify the opponent
-                notify_opponent_matched(booking, match.opponent)
-                # Notify the seeker
-                notify_seeker_matched(booking, match.opponent)
-        
-        response_data = BookingSerializer(booking).data
-        if matches:
-            response_data['matches_found'] = len(matches)
-            response_data['matched_opponents'] = [
-                {
-                    'id': str(match.opponent.id),
-                    'nickname': match.opponent.nickname,
-                    'first_name': match.opponent.first_name,
-                    'last_name': match.opponent.last_name,
-                }
-                for match in matches
-            ]
-        
-        return Response(
-            response_data,
-            status=status.HTTP_201_CREATED
-        )
+                'error': 'Failed to create booking',
+                'detail': str(e),
+                'traceback': error_trace if settings.DEBUG else None
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
