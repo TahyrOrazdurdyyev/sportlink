@@ -150,7 +150,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Base URL for generating absolute URLs (used when request context is not available)
 # Для продакшена: установите переменную окружения BASE_URL=https://api.sportlink.tm
-BASE_URL = os.getenv('BASE_URL', 'http://192.168.1.64:8000')
+BASE_URL = os.getenv('BASE_URL', 'http://172.20.10.2:8000')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

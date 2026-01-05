@@ -7,7 +7,7 @@ class AppConfig {
   
   static const String _defaultUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.1.64:8000', // Fallback для разработки
+    defaultValue: 'http://172.20.10.2:8000', // Fallback для разработки
   );
   
   static String get baseUrl => _defaultUrl;
