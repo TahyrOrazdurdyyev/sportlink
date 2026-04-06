@@ -1,18 +1,21 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgis/postgis:15-3.3
+  mongodb:
+    image: mongo:7.0
+    container_name: sportlink_mongodb
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: sportlink
-      POSTGRES_USER: sportlink
-      POSTGRES_PASSWORD: sportlink
+      MONGO_INITDB_DATABASE: ${MONGODB_NAME:-sportlink}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME:-}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
     ports:
-      - "5432:5432"
+      - "${MONGODB_PORT:-27017}:27017"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sportlink"]
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/sportlink --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,15 +37,24 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
+      - ./backend/media:/app/media
+      - ./backend/staticfiles:/app/staticfiles
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=True
-      - DATABASE_URL=postgresql://sportlink:sportlink@db:5432/sportlink
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - BASE_URL=${BASE_URL:-http://localhost:8000}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-sportlink.com.tm,www.sportlink.com.tm,216.250.13.53,localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080,https://sportlink.com.tm,http://sportlink.com.tm,http://216.250.13.53}
+      - MONGODB_NAME=${MONGODB_NAME:-sportlink}
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-}
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=dev-secret-key-change-in-production
     depends_on:
-      db:
+      mongodb:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -52,13 +64,18 @@ services:
     command: celery -A sportlink worker -l info
     volumes:
       - ./backend:/app
+      - ./backend/media:/app/media
     environment:
-      - DEBUG=True
-      - DATABASE_URL=postgresql://sportlink:sportlink@db:5432/sportlink
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - MONGODB_NAME=${MONGODB_NAME:-sportlink}
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-}
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=dev-secret-key-change-in-production
     depends_on:
-      - db
+      - mongodb
       - redis
       - backend
 
@@ -68,16 +85,21 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      - DEBUG=True
-      - DATABASE_URL=postgresql://sportlink:sportlink@db:5432/sportlink
+      - DEBUG=${DEBUG:-True}
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - MONGODB_NAME=${MONGODB_NAME:-sportlink}
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_USERNAME=${MONGODB_USERNAME:-}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-}
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=dev-secret-key-change-in-production
     depends_on:
-      - db
+      - mongodb
       - redis
       - backend
 
 volumes:
-  postgres_data:
+  mongodb_data:
+  mongodb_config:
   redis_data:
 

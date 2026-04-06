@@ -2,12 +2,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfig {
   // Backend URL будет определяться автоматически из переменной окружения
-  // Для локальной разработки: flutter run --dart-define=API_BASE_URL=http://192.168.1.64:8000
-  // Для продакшена: flutter build apk --dart-define=API_BASE_URL=https://api.sportlink.tm
+  // Для локальной разработки: flutter run --dart-define=API_BASE_URL=http://172.20.10.2:8000
+  // Для продакшена: flutter build apk --dart-define=API_BASE_URL=http://sportlink.com.tm
   
   static const String _defaultUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://172.20.10.2:8000', // Fallback для разработки
+    defaultValue: 'http://sportlink.com.tm', // Fallback для продакшена
   );
   
   static String get baseUrl => _defaultUrl;

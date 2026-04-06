@@ -77,14 +77,6 @@ interface TournamentParticipant {
   notes?: string
 }
 
-const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'open', label: 'Registration Open' },
-  { value: 'closed', label: 'Registration Closed' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-]
 
 export default function TournamentsPage() {
   const { t, i18n } = useTranslation()
@@ -97,7 +89,7 @@ export default function TournamentsPage() {
   const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
+  const [_uploadingImage, setUploadingImage] = useState(false)
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false)
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null)
   const [participants, setParticipants] = useState<TournamentParticipant[]>([])
@@ -800,7 +792,7 @@ export default function TournamentsPage() {
         <DialogTitle>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Typography variant="h6">
-              {t('participants')} - {selectedTournament?.name_i18n[i18n.language] || 
+              {t('participants')} - {selectedTournament?.name_i18n[i18n.language as 'tk' | 'ru' | 'en'] ||
                               selectedTournament?.name_i18n.en || 
                               selectedTournament?.name_i18n.tk || 
                               t('tournament')}

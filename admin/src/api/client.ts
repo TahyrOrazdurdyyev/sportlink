@@ -1,8 +1,12 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/authStore'
 
+// Always use relative path. In dev Vite proxies `/api` to the backend,
+// and in prod the reverse proxy (Nginx) serves `/api`.
+const getBaseURL = () => '/api/v1'
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,7 +27,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout()
-      window.location.href = '/login'
+      window.location.href = '/admin/login'
     }
     return Promise.reject(error)
   }

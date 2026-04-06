@@ -14,8 +14,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-# Разрешаем все локальные IP + ваш домен для продакшена
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')  # Для разработки разрешаем все
+# Разрешаем домен и IP для продакшена
+ALLOWED_HOSTS = os.getenv(
+    'ALLOWED_HOSTS', 
+    'sportlink.com.tm,www.sportlink.com.tm,216.250.13.53,localhost,127.0.0.1'
+).split(',')
 
 
 # Application definition
@@ -84,11 +87,11 @@ WSGI_APPLICATION = 'sportlink.wsgi.application'
 # MongoDB Configuration
 import mongoengine
 
-MONGODB_NAME = 'sportlink'
-MONGODB_HOST = 'localhost'
-MONGODB_PORT = 27017
-MONGODB_USERNAME = ''
-MONGODB_PASSWORD = ''
+MONGODB_NAME = os.getenv('MONGODB_NAME', 'sportlink')
+MONGODB_HOST = os.getenv('MONGODB_HOST', 'localhost')
+MONGODB_PORT = int(os.getenv('MONGODB_PORT', '27017'))
+MONGODB_USERNAME = os.getenv('MONGODB_USERNAME', '')
+MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD', '')
 
 # Connect to MongoDB
 mongoengine.connect(
@@ -149,7 +152,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Base URL for generating absolute URLs (used when request context is not available)
-# Для продакшена: установите переменную окружения BASE_URL=https://api.sportlink.tm
+# Для продакшена: установите переменную окружения BASE_URL=https://sportlink.com.tm
+# Поддерживает и домен, и IP
 BASE_URL = os.getenv('BASE_URL', 'http://172.20.10.2:8000')
 
 # Default primary key field type
@@ -200,9 +204,10 @@ SIMPLE_JWT = {
 }
 
 # CORS
+# Поддерживает и домен, и IP для админки
 CORS_ALLOWED_ORIGINS = os.getenv(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://localhost:8080'
+    'http://localhost:3000,http://localhost:8080,https://sportlink.com.tm,http://sportlink.com.tm,http://216.250.13.53'
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True

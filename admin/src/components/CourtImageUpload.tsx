@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import apiClient from '../api/client';
 
 interface CourtImageUploadProps {
   courtId: string;
@@ -56,12 +56,11 @@ export const CourtImageUpload: React.FC<CourtImageUploadProps> = ({
         formData.append('court_id', courtId);
         formData.append('image', file);
 
-        const response = await axios.post(
-          'http://localhost:8000/api/v1/admin/courts/upload-image/',
+        const response = await apiClient.post(
+          '/admin/courts/upload-image/',
           formData,
           {
             headers: {
-              'Authorization': `Bearer ${token}`,
               'Content-Type': 'multipart/form-data',
             },
             onUploadProgress: (progressEvent) => {
@@ -92,12 +91,10 @@ export const CourtImageUpload: React.FC<CourtImageUploadProps> = ({
     if (!confirm('Удалить это фото?')) return;
 
     try {
-      await axios.delete(
-        `http://localhost:8000/api/v1/admin/courts/${courtId}/images/${index}/`,
+      await apiClient.delete(
+        `/admin/courts/${courtId}/images/${index}/`,
         {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          // Auth header is automatically attached by apiClient interceptors
         }
       );
 

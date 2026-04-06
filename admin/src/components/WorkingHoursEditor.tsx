@@ -6,11 +6,9 @@ import {
   Switch,
   FormControlLabel,
   TextField,
-  IconButton,
   Paper,
   Grid,
 } from '@mui/material'
-import { Delete as DeleteIcon } from '@mui/icons-material'
 
 interface WorkingHours {
   day_of_week: number

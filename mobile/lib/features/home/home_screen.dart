@@ -102,6 +102,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     super.dispose();
   }
 
+  void _showLanguagePicker() {
+    final currentLocale = ref.read(localeProvider);
+    final loc = AppLocalizations.of(context);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(loc.selectLanguage),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RadioListTile<String>(
+              title: const Text('English'),
+              value: 'en',
+              groupValue: currentLocale.languageCode,
+              onChanged: (value) {
+                ref.read(localeProvider.notifier).setLocale(const Locale('en'));
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('Русский'),
+              value: 'ru',
+              groupValue: currentLocale.languageCode,
+              onChanged: (value) {
+                ref.read(localeProvider.notifier).setLocale(const Locale('ru'));
+                Navigator.pop(context);
+              },
+            ),
+            RadioListTile<String>(
+              title: const Text('Türkmençe'),
+              value: 'tk',
+              groupValue: currentLocale.languageCode,
+              onChanged: (value) {
+                ref.read(localeProvider.notifier).setLocale(const Locale('tk'));
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = ref.watch(localeProvider);
@@ -116,9 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
           IconButton(
             icon: const Icon(Icons.language),
             onPressed: () {
-              // Toggle language
-              final newLocale = currentLocale == 'en' ? const Locale('ru') : const Locale('en');
-              ref.read(localeProvider.notifier).state = newLocale;
+              _showLanguagePicker();
             },
           ),
           IconButton(

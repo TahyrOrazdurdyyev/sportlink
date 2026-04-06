@@ -152,7 +152,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'г. Ашхабад, ул. Огузхан, 15',
+                        'Kopetdag strap, 1951 (Yunus Emre) koce, 1.',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -216,7 +216,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                     const Padding(
                       padding: EdgeInsets.only(left: 26),
                       child: Text(
-                        '+993 12 34-56-78',
+                        '+99361845263',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

@@ -55,7 +55,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -230,10 +230,6 @@ export default function CategoriesPage() {
     }
   }
 
-  const getLocalizedName = (name_i18n: { tk?: string; ru?: string; en?: string }) => {
-    const lang = i18n.language as 'tk' | 'ru' | 'en'
-    return name_i18n[lang] || name_i18n.tk || name_i18n.ru || name_i18n.en || '-'
-  }
 
   if (loading) {
     return (
