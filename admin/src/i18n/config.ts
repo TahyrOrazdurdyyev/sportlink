@@ -85,6 +85,8 @@ const resources = {
       maxParticipants: 'Iň köp gatnaşyjy',
       registrationFeeInTMT: 'Ýazylmak töleg (TMT)',
       registrationOpen: 'Ýazylmak açyk',
+      registrationClosed: 'Ýazylmak ýapyk',
+      inProgress: 'Dowam edýär',
       spotsLeft: 'boş orun',
       draft: 'Garalama',
       upcoming: 'Geljekki',
@@ -327,6 +329,8 @@ const resources = {
       maxParticipants: 'Максимум участников',
       registrationFeeInTMT: 'Взнос за регистрацию (TMT)',
       registrationOpen: 'Регистрация открыта',
+      registrationClosed: 'Регистрация закрыта',
+      inProgress: 'Идёт',
       spotsLeft: 'мест осталось',
       draft: 'Черновик',
       upcoming: 'Предстоящий',
@@ -569,6 +573,8 @@ const resources = {
       maxParticipants: 'Max Participants',
       registrationFeeInTMT: 'Registration Fee (TMT)',
       registrationOpen: 'Registration Open',
+      registrationClosed: 'Registration Closed',
+      inProgress: 'In Progress',
       spotsLeft: 'spots left',
       draft: 'Draft',
       upcoming: 'Upcoming',
@@ -744,4 +750,3 @@ i18n
   })
 
 export default i18n
-

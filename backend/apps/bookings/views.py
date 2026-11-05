@@ -120,7 +120,12 @@ class BookingViewSet(MongoEngineModelViewSet):
                 
                 # Get plan object (handle dbref=False)
                 try:
-                    plan_id = validator.subscription.plan.id if hasattr(validator.subscription.plan, 'id') else validator.subscription.plan
+                    plan_id = validator._get_plan_id_safely()
+                    if not plan_id:
+                        return Response({
+                            'error': 'Subscription plan not found',
+                            'detail': 'Your subscription plan could not be found'
+                        }, status=status.HTTP_403_FORBIDDEN)
                     plan = SubscriptionPlan.objects.get(id=plan_id)
                 except SubscriptionPlan.DoesNotExist:
                     return Response({

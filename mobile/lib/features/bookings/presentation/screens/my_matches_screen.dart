@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/models/notification.dart';
-import '../../../../core/services/api_service.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/l10n/app_localizations.dart';
 
 class MyMatchesScreen extends ConsumerStatefulWidget {
@@ -30,8 +30,8 @@ class _MyMatchesScreenState extends ConsumerState<MyMatchesScreen> {
     });
 
     try {
-      final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.get('/bookings/matches/my/');
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.get('/bookings/matches/my/');
       
       if (response.statusCode == 200) {
         final List<dynamic> matchesJson = response.data['matches'];

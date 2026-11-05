@@ -15,9 +15,16 @@
   box-sizing: border-box;
 }
 
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
+  overflow-x: hidden;
 }
 
 button,
@@ -25,6 +32,7 @@ input,
 select,
 textarea {
   font: inherit;
+  max-width: 100%;
 }
 
 button {
@@ -34,7 +42,7 @@ button {
 }
 
 .shell {
-  width: min(1640px, calc(100% - 132px));
+  width: min(1640px, calc(100% - 64px));
   margin: 0 auto;
 }
 
@@ -42,16 +50,18 @@ button {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 220px 1fr 300px;
+  display: flex;
   align-items: center;
-  height: 86px;
-  padding: 0 82px;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 86px;
+  padding: 0 clamp(16px, 2.2vw, 82px);
   background: #fff;
   box-shadow: 0 5px 18px rgb(0 0 0 / 8%);
 }
 
 .brand {
+  flex: 0 0 auto;
   justify-self: start;
 }
 
@@ -62,14 +72,22 @@ button {
 
 .nav {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 78px;
+  flex: 1 1 auto;
+  gap: clamp(18px, 2vw, 48px);
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #777;
-  font-size: 17px;
+  font-size: clamp(14px, 1.2vw, 17px);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .nav-link.active {
@@ -81,6 +99,8 @@ button {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
 }
 
 .lang-select {
@@ -100,6 +120,7 @@ button {
   border-radius: 8px;
   padding: 0 22px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .orange-btn {
@@ -209,6 +230,7 @@ button {
   display: flex;
   align-items: center;
   gap: 42px;
+  flex-wrap: wrap;
 }
 
 .hero-btn {
@@ -218,108 +240,104 @@ button {
   border-radius: 16px;
 }
 
-.hero-actions {
+.download-actions {
   display: flex;
-  align-items: center;
-  gap: 42px;
-}
-
-.store-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.footer .store-row {
   flex-wrap: wrap;
-}
-
-.footer .store-badge {
-  flex-direction: column;
-  gap: 4px;
-  white-space: normal;
-  text-align: center;
-}
-
-.divider {
-  width: 1px;
-  height: 66px;
-  background: #999;
-}
-
-.store-label {
-  max-width: 150px;
-  color: #aaa;
-  text-transform: uppercase;
-  font-weight: 800;
-}
-
-.store-dark,
-.store-badge {
-  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  min-width: 170px;
-  min-height: 52px;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.2;
-  white-space: normal;
-  padding: 10px 16px;
-  gap: 12px;
-}
-
-.store-dark {
-  color: #fff;
-  background: #17131b;
-}
-
-.store-dark img,
-.store-badge img {
-  width: 20px;
-  height: auto;
-  flex-shrink: 0;
-}
-
-.footer .store-badge img {
-  filter: invert(1);
-}
-
-.store-text {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  line-height: 1.1;
-}
-
-.store-text span {
-  font-size: 11px;
-  text-transform: uppercase;
-  opacity: 0.75;
-}
-
-.store-text b {
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.footer .store-badge {
-  min-width: 170px;
-  border: 1px solid #d7d7d7;
-  background: #fff;
-  color: #111;
-  padding: 12px 16px;
-}
-
-.footer .store-row {
-  display: flex;
   gap: 16px;
 }
 
-.footer .store-row.muted {
-  margin-top: 16px;
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 12px 20px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.download-android {
+  background: var(--orange);
+}
+
+.download-android:hover {
+  background: var(--orange-dark);
+}
+
+.download-iphone {
+  border-color: #dedede;
+  color: #222;
+  background: #fff;
+}
+
+.download-iphone:hover {
+  background: #f6f6f6;
+}
+
+.footer .download-actions {
+  max-width: 460px;
+  margin-top: 20px;
+}
+
+.footer .download-button {
+  color: #fff;
+}
+
+.footer .download-iphone {
+  color: #222;
+}
+
+.ios-install-page {
+  min-height: 560px;
+  padding-top: 72px;
+  padding-bottom: 80px;
+}
+
+.ios-install-card {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px;
+  border: 1px solid #eee;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 8%);
+}
+
+.ios-install-card h1 {
+  margin: 0 0 16px;
+  font-size: clamp(28px, 4vw, 40px);
+}
+
+.ios-install-card > p {
+  color: #555;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.ios-install-steps {
+  display: grid;
+  gap: 14px;
+  padding-left: 28px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.ios-install-steps li {
+  padding-left: 4px;
+}
+
+.ios-install-note {
+  margin: 28px 0;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #fff0e3;
 }
 
 .hero small {
@@ -347,7 +365,7 @@ button {
 
 .hero-phone {
   justify-self: center;
-  width: 388px;
+  width: min(388px, 100%);
   max-width: 100%;
 }
 
@@ -755,10 +773,6 @@ progress {
   font-size: 20px;
 }
 
-.footer .store-badge {
-  border: 1px solid #d7d7d7;
-}
-
 .footer-cols {
   display: flex;
   gap: 92px;
@@ -837,10 +851,29 @@ progress {
   right: 0;
   z-index: 40;
   width: min(610px, 100vw);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-height: 0;
   padding: 70px 50px;
   background: #fff;
-  overflow: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.drawer-open {
+  overflow: hidden;
+}
+
+.tournament-details-image {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .drawer-close {
@@ -858,6 +891,37 @@ progress {
 .booking-form .field,
 .booking-form .two-cols {
   margin-bottom: 24px;
+}
+
+.equipment-quantities {
+  margin: 12px 0 20px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+}
+
+.equipment-quantities[hidden],
+.equipment-error[hidden] {
+  display: none;
+}
+
+.equipment-quantities .field {
+  margin-bottom: 12px;
+}
+
+.equipment-quantities .field:last-of-type {
+  margin-bottom: 0;
+}
+
+.equipment-error {
+  margin: 12px 0 0;
+  color: #b42318;
+}
+
+.equipment-unavailable {
+  margin: 12px 0 20px;
+  color: var(--muted);
 }
 
 .booking-form textarea {
@@ -1005,28 +1069,63 @@ progress {
 
 @media (max-width: 1100px) {
   .shell {
-    width: min(100% - 32px, 900px);
+    width: min(100% - 28px, 900px);
   }
 
   .topbar {
-    grid-template-columns: 1fr;
-    height: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-height: auto;
     gap: 16px;
     padding: 18px;
   }
 
+  .brand {
+    width: auto;
+  }
+
   .nav {
+    order: 2;
+    width: 100%;
+    justify-content: center !important;
     gap: 22px;
     overflow-x: auto;
+    padding-bottom: 6px;
+    flex-wrap: nowrap;
   }
 
   .top-actions {
+    order: 3;
+    width: 100%;
     justify-content: center;
+    flex-wrap: nowrap;
   }
 
   .hero {
-    grid-template-columns: 1fr;
+    display: block !important;
+    grid-template-columns: none !important;
     gap: 40px;
+    min-height: auto;
+    padding-top: 20px;
+  }
+
+  .hero-copy {
+    max-width: 100%;
+  }
+
+  .hero p {
+    max-width: 100%;
+    font-size: clamp(18px, 2.4vw, 25px);
+  }
+
+  .hero-actions {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .hero-btn {
+    min-width: 0 !important;
+    width: min(100%, 320px);
   }
 
   .grid,
@@ -1037,9 +1136,12 @@ progress {
 
   .filters {
     flex-direction: column;
+    align-items: stretch;
   }
 
+  .sport-select,
   .search {
+    width: 100%;
     min-width: 0;
   }
 
@@ -1047,5 +1149,225 @@ progress {
     flex-direction: column;
     gap: 50px;
     padding: 70px 28px;
+  }
+
+  .footer-cols {
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .profile-menu {
+    right: 20px;
+    width: min(328px, calc(100vw - 32px));
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: min(100% - 16px, 100%);
+  }
+
+  .topbar {
+    position: static;
+    top: auto;
+    z-index: auto;
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .brand img {
+    width: 110px;
+  }
+
+  .nav {
+    gap: 16px;
+    font-size: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .nav-link {
+    white-space: nowrap;
+    font-size: 15px;
+  }
+
+  .top-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .top-actions > * {
+    width: auto;
+  }
+
+  .profile-chip {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .page {
+    padding-top: 24px;
+    min-height: auto;
+  }
+
+  .hero {
+    padding-bottom: 20px;
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 9vw, 50px);
+  }
+
+  .hero small {
+    margin-bottom: 28px;
+  }
+
+  .stats {
+    flex-wrap: wrap;
+    gap: 20px 40px;
+    justify-content: space-between;
+  }
+
+  .stats b {
+    font-size: 28px;
+  }
+
+  .download-actions {
+    width: 100%;
+  }
+
+  .download-button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .section h2 {
+    font-size: 30px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tariff-page {
+    padding-top: 70px;
+    padding-bottom: 80px;
+  }
+
+  .tariff-page .grid {
+    gap: 24px;
+  }
+
+  .ios-install-page {
+    min-height: auto;
+    padding-top: 36px;
+    padding-bottom: 48px;
+  }
+
+  .ios-install-card {
+    padding: 24px 20px;
+  }
+
+  .ios-install-card > p,
+  .ios-install-steps {
+    font-size: 16px;
+  }
+
+  .auth-page {
+    gap: 40px;
+    padding: 40px 16px 80px;
+  }
+
+  .auth-logo img {
+    width: min(280px, 72vw);
+  }
+
+  .auth-form,
+  .two-cols,
+  .profile-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
+
+  .auth-submit,
+  .form-actions button {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .side-drawer {
+    width: min(100vw, 100%);
+    padding: 56px 20px 30px;
+  }
+
+  .booking-item {
+    grid-template-columns: 52px 1fr;
+    gap: 12px;
+  }
+
+  .booking-item em {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav {
+    gap: 12px;
+  }
+
+  .lang-select,
+  .ghost-btn,
+  .orange-btn,
+  .outline-btn,
+  .hero-btn,
+  .sport-select,
+  .search,
+  .field input,
+  .field select,
+  textarea,
+  .setting-group select,
+  .setting-group button {
+    min-height: 48px;
+  }
+
+  .hero-actions {
+    align-items: stretch;
+  }
+
+  .hero-btn,
+  .orange-btn,
+  .ghost-btn,
+  .outline-btn {
+    width: 100%;
+  }
+
+  .top-actions .ghost-btn,
+  .top-actions .orange-btn.small {
+    width: auto;
+    min-width: 0;
+  }
+
+  .footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .footer-cols {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .profile-menu {
+    top: 72px;
+    right: 10px;
+    width: calc(100vw - 20px);
   }
 }

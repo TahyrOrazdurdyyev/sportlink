@@ -31,7 +31,11 @@ void main() async {
   await AppConfig.init();
   
   // Initialize Firebase Messaging
-  await FirebaseMessagingService.initialize();
+  try {
+    await FirebaseMessagingService.initialize();
+  } catch (error) {
+    debugPrint('Firebase Messaging initialization failed: $error');
+  }
   
   runApp(
     const ProviderScope(

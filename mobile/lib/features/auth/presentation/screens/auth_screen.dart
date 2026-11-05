@@ -5,7 +5,9 @@ import 'package:sportlink/core/l10n/app_localizations.dart';
 import 'package:sportlink/core/utils/password_validator.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({Key? key}) : super(key: key);
+  final String? initialLogin;
+
+  const AuthScreen({super.key, this.initialLogin});
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
@@ -31,6 +33,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   
   // Locale state
   Locale _currentLocale = const Locale('en');
+
+  @override
+  void initState() {
+    super.initState();
+    _loginController.text = widget.initialLogin ?? '';
+  }
 
   @override
   void dispose() {

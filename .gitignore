@@ -86,3 +86,9 @@ logs/
 Thumbs.db
 
 backend/config/firebase-adminsdk.json
+
+# Keep the runtime compatibility overlay used by the static web Docker image
+!web/dist/
+web/dist/*
+!web/dist/local-preview.js
+!web/dist/local-preview.css

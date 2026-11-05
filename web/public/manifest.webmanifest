@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "Sportlink",
+  "short_name": "Sportlink",
+  "description": "Бронируй спортивные площадки с Sportlink.",
+  "lang": "ru",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff7300",
+  "categories": ["sports"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

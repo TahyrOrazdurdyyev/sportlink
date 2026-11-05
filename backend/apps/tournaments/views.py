@@ -34,9 +34,9 @@ class AdminTournamentViewSet(MongoEngineModelViewSet):
     
     def perform_create(self, serializer):
         """Set created_by to current user"""
-        tournament = serializer.save()
-        if not tournament.created_by:
-            tournament.created_by = self.request.user
-            tournament.save()
-        return tournament
+        serializer.save(created_by=self.request.user)
 
+    def perform_update(self, serializer):
+        """Keep the tournament owner stable and repair legacy records without one."""
+        created_by = serializer.instance.created_by or self.request.user
+        serializer.save(created_by=created_by)

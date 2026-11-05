@@ -77,6 +77,52 @@ interface TournamentParticipant {
   notes?: string
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const formatErrorDetails = (value: unknown): string => {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) {
+    return value.map(formatErrorDetails).filter(Boolean).join('; ')
+  }
+  if (isRecord(value)) {
+    return Object.entries(value)
+      .map(([key, detail]) => {
+        const formatted = formatErrorDetails(detail)
+        return formatted ? `${key}: ${formatted}` : ''
+      })
+      .filter(Boolean)
+      .join('; ')
+  }
+  return ''
+}
+
+const getTournamentErrorMessage = (error: unknown, fallback: string): string => {
+  if (!isRecord(error)) return fallback
+
+  const response = isRecord(error.response) ? error.response : null
+  const data = response && isRecord(response.data) ? response.data : null
+  const apiError = data && isRecord(data.error) ? data.error : null
+
+  if (apiError) {
+    const details = formatErrorDetails(apiError.details)
+    if (details) return details
+    if (typeof apiError.message === 'string' && apiError.message) return apiError.message
+  }
+
+  const message = formatErrorDetails(data?.error ?? data?.detail)
+  if (message) return message
+  if (error instanceof Error && error.message) return error.message
+  return fallback
+}
+
+const toDateTimeInputValue = (value?: string): string => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
 
 export default function TournamentsPage() {
   const { t, i18n } = useTranslation()
@@ -123,8 +169,8 @@ export default function TournamentsPage() {
       setError('')
       const response = await apiClient.get('/admin/tournaments/')
       setTournaments(response.data.results || [])
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load tournaments')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to load tournaments'))
     } finally {
       setLoading(false)
     }
@@ -139,8 +185,8 @@ export default function TournamentsPage() {
       setLoadingParticipants(true)
       const response = await apiClient.get(`/admin/tournaments/${tournamentId}/participants/`)
       setParticipants(response.data.participants || [])
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load participants')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to load participants'))
       setParticipants([])
     } finally {
       setLoadingParticipants(false)
@@ -167,9 +213,9 @@ export default function TournamentsPage() {
         city: tournament.city || '',
         organizer_name: tournament.organizer_name || '',
         registration_link: tournament.registration_link || '',
-        start_date: tournament.start_date ? new Date(tournament.start_date).toISOString().slice(0, 16) : '',
-        end_date: tournament.end_date ? new Date(tournament.end_date).toISOString().slice(0, 16) : '',
-        registration_deadline: tournament.registration_deadline ? new Date(tournament.registration_deadline).toISOString().slice(0, 16) : '',
+        start_date: toDateTimeInputValue(tournament.start_date),
+        end_date: toDateTimeInputValue(tournament.end_date),
+        registration_deadline: toDateTimeInputValue(tournament.registration_deadline),
         max_participants: tournament.max_participants?.toString() || '32',
         min_participants: tournament.min_participants?.toString() || '8',
         registration_fee: tournament.registration_fee?.toString() || '0',
@@ -264,8 +310,8 @@ export default function TournamentsPage() {
 
       setSelectedImage(null)
       await loadTournaments()
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload image')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to upload image'))
     } finally {
       setUploadingImage(false)
     }
@@ -276,8 +322,8 @@ export default function TournamentsPage() {
       await apiClient.delete(`/admin/tournaments/${tournamentId}/delete-image/`)
       setImagePreview(null)
       await loadTournaments()
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete image')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to delete image'))
     }
   }
 
@@ -326,8 +372,8 @@ export default function TournamentsPage() {
 
       handleCloseDialog()
       loadTournaments()
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save tournament')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to save tournament'))
     }
   }
 
@@ -345,8 +391,8 @@ export default function TournamentsPage() {
       setDeleteDialogOpen(false)
       setTournamentToDelete(null)
       loadTournaments()
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete tournament')
+    } catch (err: unknown) {
+      setError(getTournamentErrorMessage(err, 'Failed to delete tournament'))
       setDeleteDialogOpen(false)
     }
   }
@@ -723,8 +769,9 @@ export default function TournamentsPage() {
               required
             >
               <MenuItem value="draft">{t('draft')}</MenuItem>
-              <MenuItem value="upcoming">{t('upcoming')}</MenuItem>
-              <MenuItem value="ongoing">{t('ongoing')}</MenuItem>
+              <MenuItem value="open">{t('registrationOpen')}</MenuItem>
+              <MenuItem value="closed">{t('registrationClosed')}</MenuItem>
+              <MenuItem value="in_progress">{t('inProgress')}</MenuItem>
               <MenuItem value="completed">{t('completed')}</MenuItem>
               <MenuItem value="cancelled">{t('cancelled')}</MenuItem>
             </TextField>

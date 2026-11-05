@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/notification.dart' as app_notification;
-import '../../core/services/api_service.dart';
+import '../../core/network/api_client.dart';
 import '../../core/l10n/app_localizations.dart';
 import '../auth/providers/auth_provider.dart';
 
@@ -31,8 +31,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     });
 
     try {
-      final apiService = ref.read(apiServiceProvider);
-      final response = await apiService.get('/notifications/');
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.get('/notifications/');
       
       if (response.statusCode == 200) {
         final List<dynamic> notificationsJson = response.data;
@@ -55,8 +55,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _markAsRead(String notificationId) async {
     try {
-      final apiService = ref.read(apiServiceProvider);
-      await apiService.post('/notifications/$notificationId/mark_read/');
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.post('/notifications/$notificationId/mark_read/');
       
       setState(() {
         final index = _notifications.indexWhere((n) => n.id == notificationId);
@@ -81,8 +81,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   Future<void> _markAllAsRead() async {
     try {
-      final apiService = ref.read(apiServiceProvider);
-      await apiService.post('/notifications/mark_all_read/');
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.post('/notifications/mark_all_read/');
       
       setState(() {
         _notifications = _notifications.map((n) => app_notification.Notification(

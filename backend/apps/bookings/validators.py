@@ -62,12 +62,14 @@ class BookingValidator:
         return len(self.errors) == 0
     
     def _check_subscription(self):
-        """Check if user has active subscription"""
+        """Use the newest subscription that is active now."""
+        now = datetime.utcnow()
         self.subscription = UserSubscription.objects(
             user=self.user,
             status='active',
-            end_date__gte=datetime.now()
-        ).first()
+            start_date__lte=now,
+            end_date__gte=now
+        ).order_by('-start_date', '-created_at').first()
         
         if not self.subscription:
             self.errors.append({
@@ -423,4 +425,3 @@ def check_time_slot_conflict(court, start_time, end_time, exclude_booking_id=Non
         'has_conflict': conflicts.count() > 0,
         'conflicts': conflicting_bookings
     }
-

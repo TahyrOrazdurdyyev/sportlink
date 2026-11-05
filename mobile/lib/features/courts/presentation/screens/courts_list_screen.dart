@@ -68,8 +68,8 @@ class _CourtsListScreenState extends ConsumerState<CourtsListScreen> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16),
                           child: ListTile(
-                            title: Text(court.name),
-                            subtitle: Text(court.description ?? ''),
+                            title: Text(court.getName(Localizations.localeOf(context).languageCode)),
+                            subtitle: Text(court.getDescription(Localizations.localeOf(context).languageCode) ?? ''),
                             trailing: const Icon(Icons.arrow_forward_ios),
                             onTap: () {
                               Navigator.push(

@@ -51,9 +51,13 @@ class _CourtDetailScreenState extends ConsumerState<CourtDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final courtName = _court?.getName(locale);
+    final courtDescription = _court?.getDescription(locale);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_court?.name ?? 'Court Details'),
+        title: Text(courtName ?? 'Court Details'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -67,12 +71,12 @@ class _CourtDetailScreenState extends ConsumerState<CourtDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _court!.name,
+                            courtName!,
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 16),
-                          if (_court!.description != null) ...[
-                            Text(_court!.description!),
+                          if (courtDescription != null) ...[
+                            Text(courtDescription),
                             const SizedBox(height: 16),
                           ],
                           ElevatedButton(

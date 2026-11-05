@@ -12,6 +12,21 @@ class TournamentSerializer(MongoEngineModelSerializer):
     participant_count = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
     available_spots = serializers.SerializerMethodField()
+
+    def to_internal_value(self, data):
+        """Parse ISO date strings before passing values to MongoEngine."""
+        validated_data = dict(data)
+        date_fields = {
+            'start_date': serializers.DateTimeField(),
+            'end_date': serializers.DateTimeField(),
+            'registration_deadline': serializers.DateTimeField(allow_null=True),
+        }
+
+        for field_name, field in date_fields.items():
+            if field_name in validated_data:
+                validated_data[field_name] = field.run_validation(validated_data[field_name])
+
+        return validated_data
     
     class Meta:
         model = Tournament
@@ -61,4 +76,3 @@ class TournamentParticipantSerializer(serializers.Serializer):
     user = serializers.StringRelatedField(read_only=True)
     status = serializers.CharField(read_only=True)
     registration_date = serializers.DateTimeField(read_only=True)
-

@@ -12,6 +12,7 @@ type RouteName =
   | 'signup'
   | 'edit-profile'
   | 'settings'
+  | 'ios-installation'
 
 interface State {
   user: User | null
@@ -22,11 +23,17 @@ interface State {
   loading: boolean
   error: string | null
   activeCourt: Court | null
-  drawer: null | 'booking' | 'history' | 'my-tournaments' | 'subscription' | 'settings'
+  drawer: null | 'booking' | 'history' | 'my-tournaments' | 'subscription' | 'settings' | 'tournament'
   profileMenuOpen: boolean
   search: string
   categoryId: string
   lang: Lang
+  activeTournament: Tournament | null
+}
+
+interface CourtEquipment {
+  key: string
+  name_i18n?: I18nText
 }
 
 const state: State = {
@@ -43,13 +50,110 @@ const state: State = {
   search: '',
   categoryId: '',
   lang: getLang(),
+  activeTournament: null,
 }
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
+const nativeFetch = window.fetch.bind(window)
+let refreshInProgress: Promise<string | null> | null = null
+
+function refreshAccessToken(): Promise<string | null> {
+  if (refreshInProgress) return refreshInProgress
+  const refreshToken = localStorage.getItem('sportlink_web_refresh')
+  if (!refreshToken) return Promise.resolve(null)
+
+  refreshInProgress = nativeFetch('/api/v1/auth/token/refresh/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ refresh: refreshToken }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      console.warn(`Access token refresh failed with HTTP ${response.status}.`)
+      return null
+    }
+    const payload = await response.json() as { access?: unknown }
+    if (typeof payload.access !== 'string' || !payload.access) {
+      console.warn('Access token refresh returned no access token.')
+      return null
+    }
+    localStorage.setItem('sportlink_web_access', payload.access)
+    return payload.access
+  }).catch((error: unknown) => {
+    console.error('Could not refresh the Sportlink access token.', error)
+    return null
+  }).finally(() => {
+    refreshInProgress = null
+  })
+  return refreshInProgress
+}
+
+window.fetch = (input, init) => {
+  const requestUrl = input instanceof Request ? input.url : String(input)
+  const requestPath = new URL(requestUrl, window.location.href).pathname
+  const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase()
+  if (method === 'POST' && /\/subscriptions\/requests\/create\/?$/.test(new URL(requestUrl, window.location.href).pathname) && typeof init?.body === 'string') {
+    try {
+      const payload = JSON.parse(init.body)
+      if (!payload.period) {
+        return nativeFetch(input, { ...init, body: JSON.stringify({ ...payload, period: 'monthly' }) })
+      }
+    } catch (error) {
+      console.error('Could not add a subscription period to the request.', error)
+    }
+  }
+  return nativeFetch(input, init).then(async (initialResponse) => {
+    let response = initialResponse
+    const requestHeaders = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined))
+    const authorization = requestHeaders.get('Authorization')
+    if (response.status === 401 && authorization?.startsWith('Bearer ') && !/\/auth\/token\/refresh\/?$/.test(requestPath)) {
+      const accessToken = await refreshAccessToken()
+      if (accessToken) {
+        requestHeaders.set('Authorization', 'Bearer'.concat(' ', accessToken))
+        response = await nativeFetch(input, { ...init, headers: requestHeaders })
+      }
+    }
+    if (!response.ok) {
+      try {
+        const body = await response.clone().json() as { error?: unknown; detail?: unknown }
+        if (body.error && typeof body.error === 'object') {
+          const wrapped = body.error as { details?: unknown; message?: unknown }
+          const message = formatApiError(wrapped.details) || formatApiError(wrapped.message)
+          if (message) {
+            return new Response(JSON.stringify({ ...body, error: message }), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Could not read the API error response.', error)
+      }
+    }
+    return response
+  })
+}
+
+function formatApiError(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (Array.isArray(value)) return value.map(formatApiError).filter(Boolean).join('; ')
+  if (value && typeof value === 'object') {
+    return Object.entries(value)
+      .map(([key, detail]) => {
+        const message = formatApiError(detail)
+        return message ? `${key}: ${message}` : ''
+      })
+      .filter(Boolean)
+      .join('; ')
+  }
+  return ''
+}
+
 function route(): RouteName {
   const path = window.location.pathname.replace(/^\/+/, '') || 'home'
-  if (['courts', 'tournaments', 'tariffs', 'signin', 'signup', 'edit-profile', 'settings'].includes(path)) {
+  if (['courts', 'tournaments', 'tariffs', 'signin', 'signup', 'edit-profile', 'settings', 'ios-installation'].includes(path)) {
     return path as RouteName
   }
   return 'home'
@@ -68,6 +172,47 @@ function text(value: I18nText, fallback = ''): string {
 
 function tr(key: Parameters<typeof t>[1]) {
   return t(state.lang, key)
+}
+
+function downloadCopy() {
+  return {
+    ru: {
+      android: 'Скачать на Android',
+      iphone: 'Скачать на iPhone',
+      iosTitle: 'Установка Sportlink на iPhone',
+      iosIntro: 'Добавьте Sportlink на главный экран iPhone — приложение откроется отдельно, как обычное приложение.',
+      iosStep1: 'Откройте sportlink.com.tm в браузере Safari.',
+      iosStep2: 'Нажмите кнопку «Поделиться» в нижней части экрана.',
+      iosStep3: 'Выберите «На экран Домой». При необходимости прокрутите список действий вниз.',
+      iosStep4: 'Нажмите «Добавить» в правом верхнем углу.',
+      iosNote: 'После этого значок Sportlink появится на главном экране. Открывайте сайт через этот значок.',
+      iosBack: 'Вернуться на главную',
+    },
+    en: {
+      android: 'Download for Android',
+      iphone: 'Get it on iPhone',
+      iosTitle: 'Install Sportlink on iPhone',
+      iosIntro: 'Add Sportlink to your iPhone Home Screen. It will open separately, like a regular app.',
+      iosStep1: 'Open sportlink.com.tm in the Safari browser.',
+      iosStep2: 'Tap the Share button at the bottom of the screen.',
+      iosStep3: 'Choose “Add to Home Screen”. Scroll down the actions if needed.',
+      iosStep4: 'Tap “Add” in the top-right corner.',
+      iosNote: 'The Sportlink icon will appear on your Home Screen. Open the site using that icon.',
+      iosBack: 'Back to home',
+    },
+    tk: {
+      android: 'Android üçin ýükläň',
+      iphone: 'iPhone üçin goşuň',
+      iosTitle: 'Sportlink-i iPhone-a gurnamak',
+      iosIntro: 'Sportlink-i iPhone-yň baş ekranyna goşuň. Ol adaty programma ýaly aýratyn açylar.',
+      iosStep1: 'Safari brauzerinde sportlink.com.tm sahypasyny açyň.',
+      iosStep2: 'Ekranyň aşagyndaky «Paýlaş» düwmesine basyň.',
+      iosStep3: '«Baş ekrana goş» saýlaň. Gerek bolsa, hereketleriň sanawyny aşak süýşüriň.',
+      iosStep4: 'Ýokarky sag burçdaky «Goş» düwmesine basyň.',
+      iosNote: 'Sportlink nyşany baş ekranda peýda bolar. Saýty şol nyşan arkaly açyň.',
+      iosBack: 'Baş sahypa dolanmak',
+    },
+  }[state.lang]
 }
 
 function money(value?: number, currency = 'TMT') {
@@ -153,22 +298,7 @@ function footer() {
       <div>
         <img class="footer-logo" src="/assets/app_logo.png" alt="Sportlink" />
         <p>${tr('footerTagline')}</p>
-        <div class="store-row muted">
-          <span class="store-badge">
-            <img src="/assets/photos/appstoresymbol.png" alt="App Store" />
-            <span class="store-text">
-              <span>${tr('downloadedIn')}</span>
-              <b>App Store</b>
-            </span>
-          </span>
-          <span class="store-badge">
-            <img src="/assets/photos/googleplaysymbol.png" alt="Google Play" />
-            <span class="store-text">
-              <span>${tr('availableIn')}</span>
-              <b>Google Play</b>
-            </span>
-          </span>
-        </div>
+        ${downloadButtons()}
       </div>
       <div class="footer-cols">
         <div>
@@ -242,7 +372,7 @@ function tournamentCard(tournament: Tournament) {
           <li>$ ${tr('registrationFee')}: ${money(tournament.registration_fee)}</li>
           <li>◷ ${tr('registerUntil')}: ${date(tournament.registration_deadline)}</li>
         </ul>
-        <button class="orange-btn full" data-register-tournament="${tournament.id}">${tr('details')}</button>
+        <button class="orange-btn full" data-tournament-details="${tournament.id}">${tr('details')}</button>
       </div>
     </article>
   `
@@ -285,24 +415,7 @@ function homePage() {
           <p>${tr('heroText')}</p>
           <div class="hero-actions">
             <button class="orange-btn hero-btn" data-link="/signup">${tr('signUp')}</button>
-            <div class="store-row">
-              <span class="divider"></span>
-              <span class="store-label">${tr('appAlways')}</span>
-              <span class="store-dark hero-store">
-                <img src="/assets/photos/appstoresymbol.png" alt="App Store" />
-                <span class="store-text">
-                  <span>${tr('downloadedIn')}</span>
-                  <b>App Store</b>
-                </span>
-              </span>
-              <span class="store-dark hero-store">
-                <img src="/assets/photos/googleplaysymbol.png" alt="Google Play" />
-                <span class="store-text">
-                  <span>${tr('availableIn')}</span>
-                  <b>Google Play</b>
-                </span>
-              </span>
-            </div>
+            ${downloadButtons()}
           </div>
           <small>${tr('firstGameBonus')}</small>
           <div class="stats">
@@ -326,6 +439,42 @@ function homePage() {
         <h2>${tr('tournaments')}</h2>
         ${grid(tournamentCards, tr('noTournaments'))}
       </section>
+    </main>
+    ${footer()}
+  `
+}
+
+function downloadButtons() {
+  const copy = downloadCopy()
+  return `
+    <div class="download-actions">
+      <a class="download-button download-android" href="/downloads/sportlink.apk" download>
+        <span>${copy.android}</span>
+      </a>
+      <button class="download-button download-iphone" type="button" data-link="/ios-installation">
+        <span>${copy.iphone}</span>
+      </button>
+    </div>
+  `
+}
+
+function iosInstallationPage() {
+  const copy = downloadCopy()
+  return `
+    ${header('home')}
+    <main class="ios-install-page shell">
+      <article class="ios-install-card">
+        <h1>${copy.iosTitle}</h1>
+        <p>${copy.iosIntro}</p>
+        <ol class="ios-install-steps">
+          <li>${copy.iosStep1}</li>
+          <li>${copy.iosStep2}</li>
+          <li>${copy.iosStep3}</li>
+          <li>${copy.iosStep4}</li>
+        </ol>
+        <p class="ios-install-note">${copy.iosNote}</p>
+        <button class="orange-btn" type="button" data-link="/">${copy.iosBack}</button>
+      </article>
     </main>
     ${footer()}
   `
@@ -540,6 +689,7 @@ function drawer() {
     'my-tournaments': tr('myTournaments'),
     subscription: tr('subscription'),
     settings: tr('settings'),
+    tournament: state.activeTournament ? text(state.activeTournament.name_i18n, tr('tournaments')) : tr('tournaments'),
   }[state.drawer]
   return `
     <div class="shade" data-action="close-drawer"></div>
@@ -557,10 +707,48 @@ function drawerContent() {
   if (state.drawer === 'my-tournaments') return asyncPanel('registrations')
   if (state.drawer === 'subscription') return subscriptionPanel()
   if (state.drawer === 'settings') return settingsDrawer()
+  if (state.drawer === 'tournament' && state.activeTournament) return tournamentDetails(state.activeTournament)
   return ''
 }
 
+function tournamentDetails(tournament: Tournament) {
+  const deadline = tournament.registration_deadline ? new Date(tournament.registration_deadline).getTime() : 0
+  const hasSpots = !tournament.max_participants || (tournament.participant_count || 0) < tournament.max_participants
+  const copy = {
+    ru: { register: 'Зарегистрироваться' },
+    en: { register: 'Register' },
+    tk: { register: 'Hasaba ýazylmak' },
+  }[state.lang]
+  const canRegister = tournament.registration_open
+    && tournament.status === 'open'
+    && hasSpots
+    && (!deadline || deadline > Date.now())
+
+  return `
+    <section class="tournament-details">
+      ${tournament.image_url ? `<img class="tournament-details-image" src="${htmlEscape(tournament.image_url)}" alt="">` : ''}
+      <p>${htmlEscape(text(tournament.description_i18n, ''))}</p>
+      <ul class="meta-list">
+        <li>□ ${date(tournament.start_date)} - ${date(tournament.end_date)}</li>
+        <li>● ${htmlEscape(tournament.location_description || [tournament.city, tournament.country].filter(Boolean).join(', '))}</li>
+        <li>♧ ${tournament.participant_count || 0}/${tournament.max_participants || 0} ${tr('participants')}</li>
+        <li>$ ${tr('registrationFee')}: ${money(tournament.registration_fee)}</li>
+        <li>◷ ${tr('registerUntil')}: ${date(tournament.registration_deadline)}</li>
+      </ul>
+      ${canRegister ? `<button class="orange-btn full" data-register-tournament="${tournament.id}">${copy.register}</button>` : ''}
+    </section>
+  `
+}
+
 function bookingForm(court: Court) {
+  const equipmentLabels = {
+    ru: { quantity: 'Количество', noEquipment: 'Для этой категории экипировка не указана.', required: 'Укажите количество экипировки для аренды.' },
+    en: { quantity: 'Quantity', noEquipment: 'No equipment is configured for this sport category.', required: 'Enter the equipment quantities you want to rent.' },
+    tk: { quantity: 'Mukdary', noEquipment: 'Bu sport kategoriýasy üçin enjamlar görkezilmedi.', required: 'Kärendesine almak üçin enjamlaryň sanyny görkeziň.' },
+  }[state.lang]
+  const category = (state.categories as Array<Category & { available_equipment?: CourtEquipment[] }>)
+    .find((item) => item.id === court.type)
+  const equipment = category?.available_equipment || []
   return `
     <section class="booking-form">
       <h1>${htmlEscape(text(court.name_i18n, tr('court')))}</h1>
@@ -586,8 +774,19 @@ function bookingForm(court: Court) {
         </div>
         <label class="option-row">
           <span>${tr('equipmentRental')}</span>
-          <input name="equipment_needed" type="checkbox">
+          <input name="equipment_needed" type="checkbox" data-equipment-toggle ${equipment.length ? '' : 'disabled'}>
         </label>
+        ${equipment.length ? `
+          <div class="equipment-quantities" data-equipment-quantities hidden>
+            ${equipment.map((item) => `
+              <label class="field">
+                <span>${htmlEscape(text(item.name_i18n || item.key, item.key))} — ${equipmentLabels.quantity}</span>
+                <input name="equipment_quantity_${htmlEscape(item.key)}" data-equipment-key="${htmlEscape(item.key)}" type="number" min="0" step="1" value="0">
+              </label>
+            `).join('')}
+            <p class="equipment-error" data-equipment-error hidden>${equipmentLabels.required}</p>
+          </div>
+        ` : `<p class="equipment-unavailable">${equipmentLabels.noEquipment}</p>`}
         <textarea name="notes" placeholder="${tr('notes')}"></textarea>
         <button class="orange-btn full" type="submit">${tr('confirmBooking')}</button>
       </form>
@@ -682,7 +881,9 @@ function render() {
   else if (current === 'tariffs') app.innerHTML = tariffsPage()
   else if (current === 'edit-profile') app.innerHTML = editProfilePage()
   else if (current === 'settings') app.innerHTML = settingsPage()
+  else if (current === 'ios-installation') app.innerHTML = iosInstallationPage()
   else app.innerHTML = homePage()
+  document.body.classList.toggle('drawer-open', state.drawer !== null)
   bindAsyncPanels()
 }
 
@@ -777,6 +978,7 @@ app.addEventListener('click', async (event) => {
   if (action === 'close-drawer') {
     state.drawer = null
     state.activeCourt = null
+    state.activeTournament = null
     render()
   }
 
@@ -805,6 +1007,16 @@ app.addEventListener('click', async (event) => {
       return
     }
     await runAction(() => api.subscribe(subscribe.dataset.subscribe || ''), tr('subscriptionSent'))
+  }
+
+  const tournamentDetailsButton = target.closest<HTMLElement>('[data-tournament-details]')
+  if (tournamentDetailsButton) {
+    state.activeTournament = state.tournaments.find((item) => item.id === tournamentDetailsButton.dataset.tournamentDetails) || null
+    if (state.activeTournament) {
+      state.drawer = 'tournament'
+      state.profileMenuOpen = false
+      render()
+    }
   }
 
   const tournament = target.closest<HTMLElement>('[data-register-tournament]')
@@ -880,6 +1092,15 @@ app.addEventListener('submit', async (event) => {
   }
 })
 
+document.addEventListener('change', (event) => {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement) || !target.matches('[data-equipment-toggle]')) return
+  const quantities = document.querySelector<HTMLElement>('[data-equipment-quantities]')
+  const error = document.querySelector<HTMLElement>('[data-equipment-error]')
+  if (quantities) quantities.hidden = !target.checked
+  if (error) error.hidden = true
+})
+
 async function checkAvailability() {
   const form = document.querySelector<HTMLFormElement>('[data-form="booking"]')
   if (!form || !state.activeCourt) return
@@ -898,6 +1119,21 @@ async function createBooking(formData: Record<string, FormDataEntryValue>) {
   const start_time = toIso(String(formData.date), String(formData.start))
   const end_time = toIso(String(formData.date), String(formData.end))
   if (!start_time || !end_time) throw new Error(tr('chooseDateTime'))
+  const equipmentDetails = Object.fromEntries(
+    Object.entries(formData)
+      .filter(([name]) => name.startsWith('equipment_quantity_'))
+      .map(([name, value]) => [name.slice('equipment_quantity_'.length), Number(value)] as const)
+      .filter(([, quantity]) => Number.isInteger(quantity) && quantity > 0),
+  )
+  const equipmentNeeded = Boolean(formData.equipment_needed)
+  if (equipmentNeeded && Object.keys(equipmentDetails).length === 0) {
+    const messages = {
+      ru: 'Укажите количество экипировки для аренды.',
+      en: 'Enter the equipment quantities you want to rent.',
+      tk: 'Kärendesine almak üçin enjamlaryň sanyny görkeziň.',
+    }
+    throw new Error(messages[state.lang])
+  }
   await api.createBooking({
     court: state.activeCourt.id,
     start_time,
@@ -905,10 +1141,11 @@ async function createBooking(formData: Record<string, FormDataEntryValue>) {
     number_of_players: Number(formData.number_of_players || 1),
     find_opponents: Boolean(formData.find_opponents),
     opponents_needed: Number(formData.opponents_needed || 0),
-    equipment_needed: Boolean(formData.equipment_needed),
-    equipment_details: {},
+    equipment_needed: equipmentNeeded,
+    equipment_details: equipmentDetails,
     notes: String(formData.notes || ''),
   })
+
   state.drawer = null
   state.activeCourt = null
   alert(tr('bookingCreated'))
@@ -933,3 +1170,9 @@ async function runAction(action: () => Promise<unknown>, success: string) {
 
 window.addEventListener('popstate', render)
 loadData()
+
+if ('serviceWorker' in navigator) {
+  void navigator.serviceWorker.register('/service-worker.js').catch((error: unknown) => {
+    console.error('Failed to register the Sportlink service worker.', error)
+  })
+}
